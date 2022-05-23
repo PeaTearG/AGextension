@@ -1,2 +1,2 @@
-VS code extension to assist in writing and testing scripts
-no active session mode yet
+__VS code extension to assist in writing and testing scripts__
+**no active session mode yet**
