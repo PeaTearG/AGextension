@@ -16,6 +16,7 @@ function activate(context) {
 	let controllerurl = vscode.commands.registerCommand('customappgate.configure', async function () {
 		/*if (context.environmentVariableCollection.get('URL')) {
 			vscode.window.showInformationMessage(`Configured to point at the ${JSON.stringify(context.environmentVariableCollection.get('URL'))} collective`);
+		test
 		}*/
 
 		let url = await vscode.window.showInputBox({placeHolder: "controller url", 'ignoreFocusOut': true});
