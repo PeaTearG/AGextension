@@ -17,11 +17,15 @@
     "commands": [
       {
         "command": "customappgate.entitlementscript",
-        "title": "run as entitlement script"
+        "title": "entitlement script"
       },
       {
         "command": "customappgate.resetcreds",
         "title": "Change/Reset Collective/Creds"
+      },
+      {
+        "command": "customappgate.criteriascript",
+        "title": "condition/criteria script"
       },
       {
         "command": "customappgate.collective",
@@ -33,11 +37,16 @@
       },
       {
         "command": "customappgate.userclaimsscript",
-        "title": "run as user claims script"
+        "title": "user claims script"
       }
     ],
     "menus": {
       "editor/title": [
+        {
+          "command": "customappgate.criteriascript",
+          "group": "navigation",
+          "when": "resourceLangId == javascript"
+        },
         {
           "command": "customappgate.userclaimsscript",
           "group": "navigation",
