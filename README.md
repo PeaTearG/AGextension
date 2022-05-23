@@ -1,2 +1,1 @@
-# AGextension
-VS code extension to run scripts against an AG collective
+this is a new readme
