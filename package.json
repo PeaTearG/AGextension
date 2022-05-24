@@ -81,5 +81,9 @@
   "dependencies": {
     "axios": "^0.27.2",
     "uuid": "^8.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PeaTearG/AGextension.git"
   }
 }
