@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const axios = require('axios').default;
+const exp = require('constants');
 const { v4: uuidv4 } = require('uuid');
 const vscode = require('vscode');
 
@@ -14,13 +15,36 @@ const vscode = require('vscode');
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	let controllerurl = vscode.commands.registerCommand('customappgate.configure', async function () {
-		/*if (context.environmentVariableCollection.get('URL')) {
-			vscode.window.showInformationMessage(`Configured to point at the ${JSON.stringify(context.environmentVariableCollection.get('URL'))} collective`);
-		test
-		}*/
+	async function authenticate(pw, idp, un) {
+		axios.post(`https://${context.environmentVariableCollection.get('URL').value}:8443/admin/login`, {
+			providerName: idp,
+			username: un,
+			password: pw,
+			deviceId: uuidv4()
+		},
+			{
+				headers: {
+					Accept: "application/vnd.appgate.peer-v16+json",
+					"Content-Type": "application/json",
+				}
+			})
+			.then(({ data }) => {
+				context.secrets.store(`${context.environmentVariableCollection.get('URL').value}`, JSON.stringify(data.token));
+				context.secrets.store(`${context.environmentVariableCollection.get('URL').value}bearer`, JSON.stringify(data.expires));
+				vscode.window.showInformationMessage('authentication successful');
+			})
+			.catch(function (error) {
+				if (error.response) {
+					return vscode.window.showInformationMessage('Authentication Failed');
+					//			  console.log(error.response.data);
+					//			  console.log(error.response.status);
+					//			  console.log(error.response.headers);
+				}
+			})
+	}
+	let controllerurl = vscode.commands.registerCommand('customappgate.configure', async function (reenteredpw = null) {
 
-		let url = await vscode.window.showInputBox({ placeHolder: "controller url", 'ignoreFocusOut': true });
+		let url = await vscode.window.showInputBox({ value: context.environmentVariableCollection.get('URL').value?context.environmentVariableCollection.get('URL').value:"", placeHolder: context.environmentVariableCollection.get('URL').value?context.environmentVariableCollection.get('URL').value:"controller url", 'ignoreFocusOut': true });
 		context.environmentVariableCollection.append("URL", url);
 
 
@@ -40,47 +64,12 @@ function activate(context) {
 			})
 		//	  await vscode.window.showInformationMessage(loginproviders);
 		let idptouse = await vscode.window.showQuickPick(loginproviders);
+		context.secrets.store(`${context.environmentVariableCollection.get('URL').value}idp`, idptouse); 
 		let username = await vscode.window.showInputBox({ placeHolder: `username for identity provider: ${idptouse}`, 'ignoreFocusOut': true });
+		context.secrets.store(`${context.environmentVariableCollection.get('URL').value}username`, username);
 		let password = await vscode.window.showInputBox({ placeHolder: `password for user: ${username}`, 'password': true, 'ignoreFocusOut': true });
-		/*	  await vscode.window.showInformationMessage(`{
-				"providerName": idptouse,
-				"username": username,
-				"password": password,
-				"deviceId": ${uuidv4()}
-			}`)*/
-		axios.post(`https://${context.environmentVariableCollection.get('URL').value}:8443/admin/login`, {
-			providerName: idptouse,
-			username: username,
-			password: password,
-			deviceId: uuidv4()
-		},
-			{
-				headers: {
-					Accept: "application/vnd.appgate.peer-v16+json",
-					"Content-Type": "application/json",
-				}
-			})
-			.then(({ data }) => {
-				context.secrets.store(`${context.environmentVariableCollection.get('URL').value}`, JSON.stringify(data.token));
-				vscode.window.showInformationMessage('authentication successful');
-			})
-			.catch(function (error) {
-				if (error.response) {
-					return vscode.window.showInformationMessage('Authentication Failed');
-					//			  console.log(error.response.data);
-					//			  console.log(error.response.status);
-					//			  console.log(error.response.headers);
-				}
-			})
+		authenticate(password, idptouse, username);
 	}
-
-
-		//		await vscode.window.showInputBox({placeHolder: loginproviders.data});
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		//vscode.window.showInputBox({placeHolder: "controller url"});
-
 	)
 	let collective = vscode.commands.registerCommand('customappgate.collective', async function () {
 		let auth = await context.environmentVariableCollection.get('URL').value || "No Colletive Configuted, Run 'Configure AG Script'";
@@ -103,6 +92,10 @@ function activate(context) {
 		getoutputChannel().clear();
 		this.url = context.environmentVariableCollection.get('URL').value;
 		this.token = await context.secrets.get(this.url);
+		this.expires = await context.secrets.get(`${this.url}bearer`);
+		let date = new Date();
+		//vscode.window.showInformationMessage(`expires ${this.expires.toString().replace('"','').slice(0,-5)}Z now ${date.toISOString()}`);
+		if (`${this.expires.toString().replace('"','').slice(0,-5)}Z` > date.toISOString()){
 		axios.post(`https://${this.url}:8443/admin${apiendpoint}`,
 			body,
 			{
@@ -122,6 +115,14 @@ function activate(context) {
 				}
 				getoutputChannel().show(true);
 			})
+		}
+		else{
+			let password = await vscode.window.showInputBox({ placeHolder: `password for user: ${await context.secrets.get(this.url+"username")}`, 'password': true, 'ignoreFocusOut': true });
+			let idp = await context.secrets.get(`${context.environmentVariableCollection.get('URL').value}idp`);
+			let  un = await context.secrets.get(`${context.environmentVariableCollection.get('URL').value}username`);
+			await authenticate(password, idp, un);
+
+		}
 	}
 	let userclaimsscript = vscode.commands.registerCommand('customappgate.userclaimsscript', function (userClaim = {}, deviceClaim = {}, systemClaim = {}) {
 		let apiendpoint = '/user-scripts/test';
@@ -135,7 +136,6 @@ function activate(context) {
 	})
 	let entitlementscript = vscode.commands.registerCommand('customappgate.entitlementscript', async function (userClaim = {}, deviceClaim = {}, systemClaim = {}) {
 		let apiendpoint = '/entitlement-scripts/test';
-		//let type = await vscode.window.showQuickPick(['host', 'portOrType', 'appShortcut']);
 		let body = {
 			'expression': vscode.window.activeTextEditor.document.getText(),
 			'userClaims': userClaim,
