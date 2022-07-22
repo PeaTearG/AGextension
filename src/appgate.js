@@ -53,6 +53,15 @@ function activeSessions(url, creds, succfunc) {
     .catch((error)=>{console.log(error)})
 }
 
+function runScripts(url, creds, body, apiendpoint, succFunc) {
+    axios.post(`https://${this.url}:8443/admin${apiendpoint}`, body, {headers: authHeaders(creds)})
+    .then(({data})=> {
+        succFunc(data)
+    })
+}
+
+
+
 function sessDetails(url, creds, dn, succfunc) {
     axios.get(`https://${url}:8443/admin/session-info/${dn}`,
     {headers: authHeaders(creds)
@@ -63,4 +72,4 @@ function sessDetails(url, creds, dn, succfunc) {
     .catch((error)=>{console.log(error)})
 }
 
-module.exports = {sessDetails, activeSessions, loginProviders, login, headers, authHeaders};
+module.exports = {runScripts, sessDetails, activeSessions, loginProviders, login, headers, authHeaders};
