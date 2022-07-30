@@ -20,6 +20,10 @@
         "title": "Configure AG Scripter"
       },
       {
+        "command": "customappgate.new",
+        "title": "run a test function"
+      },
+      {
         "command": "customappgate.appliancesidescripts",
         "title": "fetch scripts"
       },

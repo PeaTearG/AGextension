@@ -36,7 +36,8 @@ var selected = new selectedClaims();
 		let obentitlementscripts = await session.customGet('entitlement-scripts')
 		let obcriteriascripts = await session.customGet('criteria-scripts')
 		let obuserscripts = await session.customGet('user-scripts')
-		var appplianceSideScripts = new applancescripts(obentitlementscripts, obuserscripts, obcriteriascripts)
+		let obconditions = await session.customGet('conditions')
+		var appplianceSideScripts = new applancescripts(obentitlementscripts, obuserscripts, obcriteriascripts, obconditions)
 		vscode.window.createTreeView('appliancesidescripts', {treeDataProvider: appplianceSideScripts})
 	})
 	
@@ -72,9 +73,10 @@ async function openInUntitled(content, language) {
 	
 	//var authd = new aglogin.prelogin;
 	let newfunc = vscode.commands.registerCommand('customappgate.new', async function () {
-		await authprep.build(context);
-		await session.url(authprep.baseURI);
-		await session.do(authprep.body, context);
+		let obentitlementscripts = await session.customGet('/admin-messages/summarize')
+		for (let i of obentitlementscripts){
+			console.log(i.message.match(/(?<=Script )[^ ]+/))
+		}
 	}
 	)
 	
@@ -126,7 +128,7 @@ async function openInUntitled(content, language) {
 	}
 	
 	
-	context.subscriptions.push(configure, onappliancescripts,setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
+	context.subscriptions.push(configure, onappliancescripts,setscriptsclaims, entitlementScript, userClaimsScript, clearclaims, newfunc);
 
 }
 

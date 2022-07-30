@@ -1,11 +1,12 @@
 const vscode = require("vscode");
 
 class appliancesidescripts {
-  constructor(entitlementScripts, userClaimScripts, criteriaScripts) {
-    this.claimtypes = ['entitlementScripts', 'userClaimScripts', 'criteriaScripts'];
+  constructor(entitlementScripts, userClaimScripts, criteriaScripts, conditions) {
+    this.claimtypes = ['entitlementScripts', 'userClaimScripts', 'criteriaScripts', 'conditions'];
     this.criteriaScripts = criteriaScripts
     this.entitlementScripts = entitlementScripts
     this.userClaimScripts = userClaimScripts
+    this.conditions = conditions
     this._onDidChangeTreeData = new vscode.EventEmitter();
     this.onDidChangeTreeData = this._onDidChangeTreeData.event;
   }
