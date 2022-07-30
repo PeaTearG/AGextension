@@ -16,53 +16,107 @@
   "contributes": {
     "commands": [
       {
-        "command": "customappgate.entitlementscript",
-        "title": "run as entitlement script"
+        "command": "customappgate.configure",
+        "title": "Configure AG Scripter"
+      },
+      {
+        "command": "customappgate.appliancesidescripts",
+        "title": "fetch scripts"
+      },
+      {
+        "command": "customappgate.setclaims",
+        "title": "use claims"
+      },
+      {
+        "command": "customappgate.clearclaims",
+        "title": "clear claims"
+      },
+      {
+        "command": "customappgate.entitlementScript",
+        "title": "exec. userClaimsScript"
+      },
+      {
+        "command": "customappgate.userClaimsScript",
+        "title": "run new uc script"
       },
       {
         "command": "customappgate.sessions",
-        "title": "Active Session Mode"
+        "title": "Load"
       },
       {
-        "command": "customappgate.resetcreds",
-        "title": "Change/Reset Collective/Creds"
-      },
-      {
-        "command": "customappgate.collective",
-        "title": "Current Collective"
-      },
-      {
-        "command": "customappgate.configure",
-        "title": "Configure AG Script"
-      },
-      {
-        "command": "customappgate.userclaimsscript",
-        "title": "run as user claims script"
+        "command": "customappgate.edit",
+        "title": "edit"
       }
     ],
     "menus": {
       "editor/title": [
         {
-          "command": "customappgate.userclaimsscript",
+          "command": "customappgate.userClaimsScript",
           "group": "navigation",
           "when": "resourceLangId == javascript"
         },
         {
-          "command": "customappgate.entitlementscript",
+          "command": "customappgate.entitlementScript",
           "group": "navigation",
           "when": "resourceLangId == javascript"
         }
-      ]
+      ],
+      "view/title": [
+        {
+        "command": "customappgate.clearclaims",
+        "group": "navigation",
+        "when": "view == selectedclaims"
+        },
+        {
+          "command": "customappgate.appliancesidescripts",
+          "group": "navigation",
+          "when": "view == appliancesidescripts"
+          },
+        {
+          "command": "customappgate.sessions",
+          "group": "navigation",
+          "when": "view == activesessions"
+          }
+      ],
+    "view/item/context": [
+      {
+        "command": "customappgate.setclaims",
+        "when": "view == activesessions && viewItem == asession",
+        "group": "inline"
+      },
+      {
+        "command": "customappgate.edit",
+        "when": "view == appliancesidescripts && viewItem == script",
+        "group": "inline"
+      }
+    ]
     },
     "views": {
-      "explorer": [
+      "appgate-explorer": [
+        {
+          "id": "appliancesidescripts",
+          "name": "Scripts on Controller"
+        },
         {
           "id": "activesessions",
           "name": "Active Session Mode"
+        },
+        {
+          "id": "selectedclaims",
+          "name": "Selected Claims"
         }
       ]
-    }
-  },
+      },
+      "viewsContainers": {
+        "activitybar": [
+          {
+            "id": "appgate-explorer",
+            "title": "Appgate Scripters",
+            "icon": "src/Appgate-Icon-Library_032021_Gateway Thicker.svg"
+          }
+        ]
+      }
+    },
   "scripts": {
     "test-compile": "tsc -p ./",
     "lint": "eslint .",

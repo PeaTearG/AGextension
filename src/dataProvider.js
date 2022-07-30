@@ -1,79 +1,67 @@
 const vscode = require("vscode");
-const axios = require('axios').default;
+
+
 
 class DataProvider {
-  constructor(userdata) {
-    //this.url = context.environmentVariableCollection.get('URL').value;
-		//this.token = context.secrets.get(this.url);
-    this.users = userdata
-    
-    /*this.users = [
-      {
-        firstName: "John",
-        lastName: "Doe",
-        position: { name: "Manager", level: "3" },
-      },
-      {
-        firstName: "Jane",
-        lastName: "Doe",
-        position: { name: "Backend Engineer", level: "2" },
-      },
-    ];*/
-    this.userTreeItems = this.convertUsersToTreeItems();
+  constructor(session) {
+    this.session = session
+    this.sessionaggregation = [];
+    this._onDidChangeTreeData = new vscode.EventEmitter();
+    this.onDidChangeTreeData = this._onDidChangeTreeData.event;
   }
-
+  refresh(){
+    this._onDidChangeTreeData.fire();
+  }
   getTreeItem(element) {
     return element;
   }
+  defineClaimTreeItems(claims){
+    const claimTypes = ["userClaims", "deviceClaims", "systemClaims"]
+    let array = [];
+    for (let claimtype of claimTypes){
+      let newclaim = new vscode.TreeItem(claimtype, vscode.TreeItemCollapsibleState.Collapsed)
+      newclaim['toExpand'] = claims[claimtype];
+      array.push(newclaim)
+    }
+    return array;
+  }
 
-getChildren(element) {
+  async getChildren(element) {
     if (element) {
-      return element.getPositionDetails();
+      if(element.hasOwnProperty('dn')){
+        let claims = await this.session.getClaims(element.dn)
+        element['claims'] = Object.values(claims)[0];
+        return this.defineClaimTreeItems(element.claims)
+      }else{
+        let array = [];
+        for (let i of Object.keys(element.toExpand)){
+          let subclaim = typeof element.toExpand[i] === "object" ? new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Collapsed) : new vscode.TreeItem(`{${i}: ${element.toExpand[i]}}`);
+          subclaim['toExpand'] = element.toExpand[i];
+          array.push(subclaim)
+        }
+        return array
+      }
+     
     }
       else {
-      return this.userTreeItems;
+        this.activesessions = await this.session.activeSessions();
+        let array = [];
+        // this.users.forEach((element) => 
+         for (let element of await this.activesessions.data){
+          let newsession = new vscode.TreeItem(element.username, vscode.TreeItemCollapsibleState.Collapsed)
+          newsession['dn'] = element.distinguishedName;
+          newsession.contextValue = "asession"
+          array.push(newsession)
+         }
+          
+         ;
+         return array;
     };
 };
 
-  convertUsersToTreeItems() {
-    let array = [];
-   // this.users.forEach((element) => 
-    for (let element of this.users){
-      array.push(
-        new UserTreeItem(element, vscode.TreeItemCollapsibleState.None)
-      );
-    };
-    return array;
-  }
+  
+
 }
 
-class UserTreeItem {
-  // we must provide the property label for it to show up the tree view
-  constructor(user, collapsibleState) {
-    this.user = user;
-    this.label = `${user.username} ${user.providerName}`;
-    this.collapsibleState = collapsibleState;
-    this.positionDetails = [];
-
-    this.convertPositionToTreeItems();
-  }
-
-  // Convert each property in user.position to a TreeItem which is treated as child of the user tree item
-  convertPositionToTreeItems() {
-    if (this.user.distinguishedName) {
-      let prop1 = new vscode.TreeItem(
-        `position name: ${this.user.distinguishedName}`
-      );
-      let prop2 = new vscode.TreeItem(
-        `position level: ${this.user.deviceId}`
-      );
-      this.positionDetails = [prop1, prop2];
-    }
-  }
-
-  getPositionDetails() {
-    return this.positionDetails;
-  }
-}
 
 module.exports = DataProvider;
