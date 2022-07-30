@@ -2,7 +2,7 @@
   "name": "customappgate",
   "displayName": "customappgate",
   "description": "",
-  "version": "0.16.0",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.67.0"
   },
@@ -67,33 +67,33 @@
       ],
       "view/title": [
         {
-        "command": "customappgate.clearclaims",
-        "group": "navigation",
-        "when": "view == selectedclaims"
+          "command": "customappgate.clearclaims",
+          "group": "navigation",
+          "when": "view == selectedclaims"
         },
         {
           "command": "customappgate.appliancesidescripts",
           "group": "navigation",
           "when": "view == appliancesidescripts"
-          },
+        },
         {
           "command": "customappgate.sessions",
           "group": "navigation",
           "when": "view == activesessions"
-          }
+        }
       ],
-    "view/item/context": [
-      {
-        "command": "customappgate.setclaims",
-        "when": "view == activesessions && viewItem == asession",
-        "group": "inline"
-      },
-      {
-        "command": "customappgate.edit",
-        "when": "view == appliancesidescripts && viewItem == script",
-        "group": "inline"
-      }
-    ]
+      "view/item/context": [
+        {
+          "command": "customappgate.setclaims",
+          "when": "view == activesessions && viewItem == asession",
+          "group": "inline"
+        },
+        {
+          "command": "customappgate.edit",
+          "when": "view == appliancesidescripts && viewItem == script",
+          "group": "inline"
+        }
+      ]
     },
     "views": {
       "appgate-explorer": [
@@ -110,17 +110,17 @@
           "name": "Selected Claims"
         }
       ]
-      },
-      "viewsContainers": {
-        "activitybar": [
-          {
-            "id": "appgate-explorer",
-            "title": "Appgate Scripters",
-            "icon": "src/Appgate-Icon-Library_032021_Gateway Thicker.svg"
-          }
-        ]
-      }
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "appgate-explorer",
+          "title": "Appgate Scripters",
+          "icon": "src/Appgate-Icon-Library_032021_Gateway Thicker.svg"
+        }
+      ]
+    }
+  },
   "scripts": {
     "test-compile": "tsc -p ./",
     "lint": "eslint .",
