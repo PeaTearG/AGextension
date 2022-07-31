@@ -16,7 +16,10 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onCommand:customappgate.configure",
+    "onView:appliancesidescripts",
+    "onView:activesessions",
+    "onView:selectedclaims"
   ],
   "main": "./src/extension.js",
   "contributes": {
@@ -53,20 +56,22 @@
       },
       {
         "command": "customappgate.edit",
-        "title": "edit"
+        "title": "edit",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "customappgate.runnow",
+        "title": "run",
+        "icon": "$(run)"
       }
     ],
     "menus": {
-      "editor/title": [
+      "commandPalette": [
         {
-          "command": "customappgate.userClaimsScript",
-          "group": "navigation",
-          "when": "resourceLangId == javascript"
+          "command": "customappgate.userClaimsScript"
         },
         {
-          "command": "customappgate.entitlementScript",
-          "group": "navigation",
-          "when": "resourceLangId == javascript"
+          "command": "customappgate.entitlementScript"
         }
       ],
       "view/title": [
@@ -94,6 +99,12 @@
         },
         {
           "command": "customappgate.edit",
+          "when": "view == appliancesidescripts && viewItem == script",
+          "group": "inline",
+          "icon": "edit"
+        },
+        {
+          "command": "customappgate.runnow",
           "when": "view == appliancesidescripts && viewItem == script",
           "group": "inline"
         }

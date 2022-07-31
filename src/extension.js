@@ -30,7 +30,7 @@ var selected = new selectedClaims();
 		context.environmentVariableCollection.delete('userClaims')
 		context.environmentVariableCollection.delete('deviceClaims')
 		context.environmentVariableCollection.delete('systemClaims')
-	
+
 
 	let onappliancescripts = vscode.commands.registerCommand('customappgate.appliancesidescripts', async function(){
 		let obentitlementscripts = await session.customGet('entitlement-scripts')
@@ -50,6 +50,18 @@ var selected = new selectedClaims();
 		
 	}
 	)
+let runscriptimmediatly = vscode.commands.registerCommand('customappgate.runnow', async(e)=>{
+	getoutputChannel().clear();
+		let data = await session[e.scriptType](e.toExpand, selected.claims);
+		for (let i in data) {
+			//getoutputChannel().appendLine("_".repeat(100-i.length) + i);
+			getoutputChannel().appendLine("");
+			(i === 'executionMs') ? getoutputChannel().appendLine(data[i]) : (i === 'result')? getoutputChannel().appendLine(JSON.stringify(data[i])) : getoutputChannel().append(data[i]);
+			getoutputChannel().appendLine("_".repeat(100-i.length) + i);
+			getoutputChannel().appendLine("");
+		}
+		getoutputChannel().show(true);
+})
 	
 let openscript = vscode.commands.registerCommand('customappgate.edit', async function (e) {
 	openInUntitled(e.toExpand, 'javascript')

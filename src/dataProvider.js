@@ -17,10 +17,12 @@ class DataProvider {
   }
   defineClaimTreeItems(claims){
     const claimTypes = ["userClaims", "deviceClaims", "systemClaims"]
+    const claimiconmap = {userClaims: "account",deviceClaims:"device-desktop", systemClaims:"gear"}
     let array = [];
     for (let claimtype of claimTypes){
       let newclaim = new vscode.TreeItem(claimtype, vscode.TreeItemCollapsibleState.Collapsed)
       newclaim['toExpand'] = claims[claimtype];
+      newclaim.iconPath = new vscode.ThemeIcon(claimiconmap[claimtype]);
       array.push(newclaim)
     }
     return array;
@@ -37,6 +39,7 @@ class DataProvider {
         for (let i of Object.keys(element.toExpand)){
           let subclaim = typeof element.toExpand[i] === "object" ? new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Collapsed) : new vscode.TreeItem(`{${i}: ${element.toExpand[i]}}`);
           subclaim['toExpand'] = element.toExpand[i];
+          subclaim.iconPath = element.iconPath;
           array.push(subclaim)
         }
         return array
