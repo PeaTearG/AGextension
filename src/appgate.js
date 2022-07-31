@@ -127,7 +127,8 @@ class postlogin{
         return resp.data;
     }
     
-    entitlementScript = async (script, type, context) => {
+    entitlementScript = async (script, context) => {
+        let type = await vscode.window.showQuickPick(['host', 'portOrType', 'appShortcut'])
         let body = new entitlementScriptBody(script, context)
         let resp = await this.runScripts(':8443/admin/entitlement-scripts/test', body[type]())
         return resp.data
