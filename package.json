@@ -4,7 +4,7 @@
   "publisher": "PeaTearG",
   "description": "",
   "version": "1.4.0",
-  "icon": "https://github.com/PeaTearG/AGextension/blob/793aad51753d8c5f29ebc1e791a0055c8cf725aa/src/polygon13.png",
+  "icon": "https://github.com/PeaTearG/AGextension/raw/793aad51753d8c5f29ebc1e791a0055c8cf725aa/src/polygon13.png",
   "engines": {
     "vscode": "^1.67.0"
   },
