@@ -21,10 +21,6 @@
         "title": "Configure AG Scripter"
       },
       {
-        "command": "customappgate.new",
-        "title": "run a test function"
-      },
-      {
         "command": "customappgate.appliancesidescripts",
         "title": "fetch scripts"
       },
@@ -38,11 +34,13 @@
       },
       {
         "command": "customappgate.entitlementScript",
-        "title": "exec. userClaimsScript"
+        "title": "Run as entitlementScript",
+        "shortTitle": "entitlementScript"
       },
       {
         "command": "customappgate.userClaimsScript",
-        "title": "run new uc script"
+        "title": "Run as userClaimsScript",
+        "shortTitle": "userClaimsScript"
       },
       {
         "command": "customappgate.sessions",

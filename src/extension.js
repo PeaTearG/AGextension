@@ -69,16 +69,6 @@ async function openInUntitled(content, language) {
 		session.authenticate(authprep.body, context);
 		
 	})
-
-	
-	//var authd = new aglogin.prelogin;
-	let newfunc = vscode.commands.registerCommand('customappgate.new', async function () {
-		let obentitlementscripts = await session.customGet('/admin-messages/summarize')
-		for (let i of obentitlementscripts){
-			console.log(i.message.match(/(?<=Script )[^ ]+/))
-		}
-	}
-	)
 	
 
 	let setscriptsclaims = vscode.commands.registerCommand('customappgate.setclaims', async function(e) {
@@ -128,7 +118,7 @@ async function openInUntitled(content, language) {
 	}
 	
 	
-	context.subscriptions.push(configure, onappliancescripts,setscriptsclaims, entitlementScript, userClaimsScript, clearclaims, newfunc);
+	context.subscriptions.push(configure, onappliancescripts,setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
 
 }
 
