@@ -1,9 +1,10 @@
 const vscode = require("vscode");
 
 class appliancesidescripts {
-  constructor(entitlementScripts, userClaimScripts, criteriaScripts, conditions) {
+  constructor(session, entitlementScripts, userClaimScripts, criteriaScripts, conditions) {
     this.claimtypes = ['entitlementScript', 'userClaimsScript', 'criteriaScript', 'conditions'];
     this.criteriaScript = criteriaScripts
+    this.session = session
     this.entitlementScript = entitlementScripts
     this.userClaimsScript = userClaimScripts
     this.conditions = conditions
@@ -16,10 +17,25 @@ class appliancesidescripts {
   getTreeItem(element){
     return element;
   }
+  groupEntitlementScripts(){
+    this.host = this.entitlementScript.filter(f=> f.type === 'host')
+    this.portOrType = this.entitlementScript.filter(f=> f.type === 'portOrType')
+    this.appShortcut = this.entitlementScript.filter(f=> f.type === 'appShortcut')
+  }
  getChildren(element){
+  this.groupEntitlementScripts()
     if(element){
-        const scripticonmap = {userClaimsScript: "person-add",entitlementScript:"live-share", criteriaScript:"tasklist", conditions:"lock-small"}
-        let array = [];
+      let array = [];
+      if(element.label === 'entitlementScript'){
+        this.groupEntitlementScripts()
+        let enttypes = ['host', 'appShortcut', 'portOrType']
+        for (let i of enttypes){
+          let ent = new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Collapsed)
+          ent['toExpand'] = this[i]
+          array.push(ent)
+        }
+      }
+        else{const scripticonmap = {userClaimsScript: "person-add",entitlementScript:"live-share", criteriaScript:"tasklist", conditions:"lock-small"}
         for (let i of element['toExpand']){
             let subclaim = new vscode.TreeItem(i['name'], vscode.TreeItemCollapsibleState.None)
             subclaim['toExpand'] = i['expression']
@@ -27,7 +43,7 @@ class appliancesidescripts {
             subclaim.contextValue = 'script';
             subclaim.iconPath = new vscode.ThemeIcon(scripticonmap[element.contextValue]);
             array.push(subclaim)
-        }
+        }}
         return array
       }
       else {
