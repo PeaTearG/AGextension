@@ -4,7 +4,7 @@ const vscode = require("vscode");
 
 class DataProvider {
   constructor(session) {
-    this.session = session
+    this.session = session;
     this.sessionaggregation = [];
     this._onDidChangeTreeData = new vscode.EventEmitter();
     this.onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -20,6 +20,10 @@ class DataProvider {
     const claimiconmap = {userClaims: "account",deviceClaims:"device-desktop", systemClaims:"gear"}
     let array = [];
     for (let claimtype of claimTypes){
+
+    //this will return count the number of policies by
+      //function(acc, arr){}
+      //claimTypes.reduce((acc, t)=>(acc, t)){
       let newclaim = new vscode.TreeItem(claimtype, vscode.TreeItemCollapsibleState.Collapsed)
       newclaim['toExpand'] = claims[claimtype];
       newclaim.iconPath = new vscode.ThemeIcon(claimiconmap[claimtype]);

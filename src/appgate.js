@@ -14,7 +14,7 @@ class prelogin {
           };
     }
     controller = async (context) => {
-        this.baseURI = await vscode.window.showInputBox({placeHolder: "controller url", 'ignoreFocusOut': true, value: context.environmentVariableCollection.get('URL') ? context.environmentVariableCollection.get('URL').value : ""}); 
+        this.baseURI = await vscode.window.showInputBox({placeHolder: "controller url", 'ignoreFocusOut': true, value: context.environmentVariableCollection.get('URL') ? context.environmentVariableCollection.get('URL').value : null}); 
         context.environmentVariableCollection.append('URL', this.baseURI);
         return this.baseURI;
     }
@@ -77,6 +77,7 @@ class postlogin{
         }else{
             this.authorize(context)
         }
+        vscode.window.showInformationMessage('Authentication Successful')
     }
     otpinit = async (body, context) => {
         let resp = await axios.post(`https://${this.baseURI}:8443/admin/authentication/otp/initialize`, body, {headers: this.headers})
@@ -98,7 +99,6 @@ class postlogin{
         await context.secrets.delete(this.baseURI)
         await context.secrets.store(this.baseURI, resp.data.token);
         await this.buildheaders(context);
-        vscode.window.showInformationMessage('Authentication Successful')
     }
     buildheaders = async (context) => {
         this.baseURI = context.environmentVariableCollection.get('URL').value;

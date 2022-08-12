@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-const axios = require('axios').default;
+//const axios = require('axios').default;
 const vscode = require('vscode');
 const DataProvider  = require("./dataProvider.js");
 const selectedClaims = require("./selectedclaims");
@@ -15,42 +15,72 @@ const aglogin = require("./appgate.js");
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	var authprep = new aglogin.prelogin();
+//context.environmentVariableCollection.clear();
+var authprep = new aglogin.prelogin();
 var session = new aglogin.postlogin();
-var myData = new DataProvider(session);
+//var myData = new DataProvider(session);
 var selected = new selectedClaims();
-	if(context.environmentVariableCollection.get("URL")){
-		if(context.secrets.get(context.environmentVariableCollection.get('URL').value)){
-			session.buildheaders(context)
-			vscode.window.showInformationMessage('existing session found')
-		}
+
+
+ async function getURL(){
+	if(context.environmentVariableCollection.get('URL')){
+		session.url(context.environmentVariableCollection.get('URL').value)
 	}else{
-		vscode.window.showInformationMessage('run "Configure AG scripter"')
+		await authprep.controller(context)
+		session.url(authprep.baseURI)
 	}
-		context.environmentVariableCollection.delete('userClaims')
-		context.environmentVariableCollection.delete('deviceClaims')
-		context.environmentVariableCollection.delete('systemClaims')
+	return context.secrets.get(session.baseURI)
+}
+function hasBearer(){
+	getURL()
+	.then((t)=>{
+		if(t){
+		vscode.window.showInformationMessage(`existing session found for ${session.baseURI}`)
+		session.headers['Authorization'] = `Bearer ${t}`
+		}else{
+			vscode.commands.executeCommand('customappgate.configure')
+		}
+	}).then(()=>{
+		vscode.commands.executeCommand('customappgate.sessions')
+		vscode.commands.executeCommand('customappgate.appliancesidescripts')
+	})}
+
+hasBearer() 
 
 
-	let onappliancescripts = vscode.commands.registerCommand('customappgate.appliancesidescripts', async function(){
-		let obentitlementscripts = await session.customGet('entitlement-scripts')
-		let obcriteriascripts = await session.customGet('criteria-scripts')
-		let obuserscripts = await session.customGet('user-scripts')
-		let obconditions = await session.customGet('conditions')
-		var appplianceSideScripts = new applancescripts(obentitlementscripts, obuserscripts, obcriteriascripts, obconditions)
-		vscode.window.createTreeView('appliancesidescripts', {treeDataProvider: appplianceSideScripts})
-	})
+
+context.environmentVariableCollection.delete('userClaims')
+context.environmentVariableCollection.delete('deviceClaims')
+context.environmentVariableCollection.delete('systemClaims')
+
+
+vscode.commands.registerCommand("customappgate.appliancesidescripts",
+    async function () {
+      let obentitlementscripts = session.customGet("entitlement-scripts");
+      let obcriteriascripts = session.customGet("criteria-scripts");
+      let obuserscripts = session.customGet("user-scripts");
+      let obconditions = session.customGet("conditions");
+      var appplianceSideScripts = new applancescripts(session,
+        await obentitlementscripts,
+        await obuserscripts,
+        await obcriteriascripts,
+        await obconditions
+      );
+      vscode.window.createTreeView("appliancesidescripts", {
+        treeDataProvider: appplianceSideScripts,
+      });
+	}
+	);
 	
+vscode.commands.registerCommand('customappgate.sessions', async function(){
+	let myData = new DataProvider(session);
+	await vscode.window.createTreeView("activesessions", {treeDataProvider: myData});
+	myData.refresh();		
+}
+)
 
 
-	let activesessionmode = vscode.commands.registerCommand('customappgate.sessions', async function(){
-		var sessiontreeview = vscode.window.createTreeView("activesessions", {treeDataProvider: myData});
-		//vscode.commands.executeCommand('customappgate.collapse')
-		myData.refresh();
-		
-	}
-	)
-let runscriptimmediatly = vscode.commands.registerCommand('customappgate.runnow', async(e)=>{
+vscode.commands.registerCommand('customappgate.runnow', async(e)=>{
 	getoutputChannel().clear();
 		let data = await session[e.scriptType](e.toExpand, selected.claims);
 		for (let i in data) {
@@ -63,8 +93,8 @@ let runscriptimmediatly = vscode.commands.registerCommand('customappgate.runnow'
 		getoutputChannel().show(true);
 })
 	
-let openscript = vscode.commands.registerCommand('customappgate.edit', async function (e) {
-	openInUntitled(e.toExpand, 'javascript')
+vscode.commands.registerCommand('customappgate.edit', async function (e) {
+	openInUntitled(e.expression, 'javascript')
 })
 async function openInUntitled(content, language) {
     const document = await vscode.workspace.openTextDocument({
@@ -74,13 +104,16 @@ async function openInUntitled(content, language) {
     vscode.window.showTextDocument(document);
 }
 
-	let configure = vscode.commands.registerCommand('customappgate.configure', async function() {
-		//vscode.commands.executeCommand('workbench.actions.treeView.activesessions.collapseAll');
-		await authprep.build(context);
-		await session.url(authprep.baseURI);
-		session.authenticate(authprep.body, context);
-		
-	})
+let configure = vscode.commands.registerCommand('customappgate.configure', async function() {
+
+	//vscode.commands.executeCommand('workbench.actions.treeView.activesessions.collapseAll');
+
+	await authprep.build(context);
+	await session.url(authprep.baseURI);
+	await session.authenticate(authprep.body, context)
+
+}
+)
 	
 
 	let setscriptsclaims = vscode.commands.registerCommand('customappgate.setclaims', async function(e) {
@@ -128,9 +161,7 @@ async function openInUntitled(content, language) {
 		}
 		return _channel
 	}
-	
-	
-	context.subscriptions.push(configure, onappliancescripts,setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
+	context.subscriptions.push( configure,/* onappliancescripts, */setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
 
 }
 
