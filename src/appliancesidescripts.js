@@ -50,8 +50,9 @@ countbyportOrType(scriptname){
 return count
 }
 
-countbyappShortcut(scriptid){
-  let count = this.entitlements.filter(entitlement=>
+async countbyappShortcut(scriptid){
+  this.hasOwnProperty('entitlements') ? undefined : this.entitlements = await this.session.customGet('entitlements');
+  let count = await this.entitlements.filter(entitlement=>
     //console.log(entitlement)
     entitlement.appShortcutScripts.includes(scriptid)
     )
@@ -59,13 +60,31 @@ countbyappShortcut(scriptid){
 return count
 }
 
+async countbyuserScript(scriptid){
+  this.hasOwnProperty('identityproviders') ? undefined : this.identityproviders = await this.session.customGet('identity-providers');
+  //let userClaimsScripts = await this.session.customGet('identity-providers')
+  let count = await this.identityproviders.filter(userscript => userscript.userScripts.includes(scriptid))
+  return count
+}
+
+async countbyCondition(scriptid){
+  this.hasOwnProperty('entitlements') ? undefined : this.entitlements = await this.session.customGet('entitlements');
+  //let userClaimsScripts = await this.session.customGet('identity-providers')
+  let count = await this.entitlements.filter(entitlement => entitlement.conditions.includes(scriptid))
+  return count
+}
+
+async countbycriteria(scriptname){
+  this.hasOwnProperty('policies') ? undefined : this.policies = await this.session.customGet('policies');
+  //let userClaimsScripts = await this.session.customGet('identity-providers')
+  let count = await this.policies.filter(policy => policy.expression.includes(`/*criteriaScript*/(${scriptname}(claims))/*end criteriaScript*/`))
+  return count
+}
+
  async getChildren(element){
-  
-  await this.groupEntitlementScripts()
     if(element){
       let array = [];
       if(element.label === 'entitlementScript'){
-        this.groupEntitlementScripts()
         let enttypes = ['host', 'appShortcut', 'portOrType']
         for (let i of enttypes){
           let ent = new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Collapsed)
@@ -78,16 +97,29 @@ return count
             let subclaim = new vscode.TreeItem(i['name'], vscode.TreeItemCollapsibleState.None)
             subclaim['toExpand'] = i['expression']
             subclaim['scriptType'] = i.type;
-            if(i.type === 'appShortcut'){
-              subclaim.contextValue = this.countbyappShortcut(i['id']);
-            }else if(i.type === 'host'){
-              subclaim.contextValue = this.countbyhost(i['name'])
-            }else if(i.type === 'portOrType'){
-              subclaim.contextValue = this.countbyportOrType(i['name'])
-            }
             subclaim.tooltip = new vscode.MarkdownString();
+            if(i.type === 'appShortcut'){
+              subclaim.contextValue = await this.countbyappShortcut(i['id']);
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/access/entitlements/edit/${e.id})  \n`))
+            }else if(i.type === 'host'){
+              subclaim.contextValue = await this.countbyhost(i['name'])
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/access/entitlements/edit/${e.id})  \n`))
+            }else if(i.type === 'portOrType'){
+              subclaim.contextValue = await this.countbyportOrType(i['name'])
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/access/entitlements/edit/${e.id})  \n`))
+            }else if(element.label === 'userClaimsScript'){
+              subclaim.contextValue = await this.countbyuserScript(i['id'])
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/identity/identity-providers/edit/${e.id})  \n`))
+            }else if(element.label === 'criteriaScript'){
+              subclaim.contextValue = await this.countbycriteria(i['name'])
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/access/policies/edit/${e.id})  \n`))
+            }else if(element.label === 'conditions'){
+              subclaim.contextValue = await this.countbyCondition(i['id'])
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/access/entitlements/edit/${e.id})  \n`))
+            }
+            
             subclaim.label += ` (${subclaim.contextValue.length})`
-            subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://controller.sdpfederal.com:8443/ui/access/entitlements/edit/${e.id})  \n`))
+            
             subclaim.iconPath = new vscode.ThemeIcon(scripticonmap[element.contextValue]);
             array.push(subclaim)
         }}
@@ -95,6 +127,7 @@ return count
         return array
       }
       else {
+        await this.groupEntitlementScripts()
         let array = [];
         for (let i of this.claimtypes){
           let subclaim = new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Collapsed)
