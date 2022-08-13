@@ -30,7 +30,7 @@
       },
       {
         "command": "customappgate.appliancesidescripts",
-        "title": "fetch scripts"
+        "title": "refresh scripts"
       },
       {
         "command": "customappgate.setclaims",
@@ -39,6 +39,11 @@
       {
         "command": "customappgate.clearclaims",
         "title": "clear claims"
+      },
+      {
+        "command": "customappgate.revoketokens",
+        "title": "revoke tokens",
+        "icon": "$(refresh)"
       },
       {
         "command": "customappgate.entitlementScript",
@@ -94,6 +99,11 @@
       "view/item/context": [
         {
           "command": "customappgate.setclaims",
+          "when": "view == activesessions && viewItem == asession",
+          "group": "inline"
+        },
+        {
+          "command": "customappgate.revoketokens",
           "when": "view == activesessions && viewItem == asession",
           "group": "inline"
         },

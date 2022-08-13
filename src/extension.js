@@ -18,7 +18,7 @@ function activate(context) {
 //context.environmentVariableCollection.clear();
 var authprep = new aglogin.prelogin();
 var session = new aglogin.postlogin();
-//var myData = new DataProvider(session);
+var myData = new DataProvider(session);
 var selected = new selectedClaims();
 
 
@@ -79,10 +79,21 @@ vscode.commands.registerCommand('customappgate.sessions', async function(){
 }
 )
 
+vscode.commands.registerCommand('customappgate.revoketokens', async function(e){
+	console.log(e)
+	//https://appgate.company.com:8443/admin/token-records/revoked/by-dn/{distinguished-name}
+	let body = {
+		revocationReason: "Triggered",
+		delayMinutes: 0,
+		tokensPerSecond: 7
+	}
+	await session.customPut(`token-records/revoked/by-dn/${e.dn}`, body)	
+}
+)
 
 vscode.commands.registerCommand('customappgate.runnow', async(e)=>{
 	getoutputChannel().clear();
-		let data = await session[e.scriptType](e.toExpand, selected.claims);
+		let data = await session[e.scriptfamily](e.toExpand, selected.claims);
 		for (let i in data) {
 			//getoutputChannel().appendLine("_".repeat(100-i.length) + i);
 			getoutputChannel().appendLine("");
@@ -94,7 +105,7 @@ vscode.commands.registerCommand('customappgate.runnow', async(e)=>{
 })
 	
 vscode.commands.registerCommand('customappgate.edit', async function (e) {
-	openInUntitled(e.expression, 'javascript')
+	openInUntitled(e.toExpand, 'javascript')
 })
 async function openInUntitled(content, language) {
     const document = await vscode.workspace.openTextDocument({

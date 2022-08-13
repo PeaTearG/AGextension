@@ -121,6 +121,11 @@ class postlogin{
         return resp.data.data
     }
 
+    customPut = async(apiEndpoint, body) => {
+        let resp = await axios.put(`https://${this.baseURI}:8443/admin/${apiEndpoint}`, body, {headers: this.headers})
+        return resp.data.data
+    }
+
     userClaimsScript = async (script, context) => {
         let body = new scriptBody(script, context);
         let resp = await this.runScripts(':8443/admin/user-scripts/test', body.format())
