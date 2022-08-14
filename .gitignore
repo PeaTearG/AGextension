@@ -2513,3 +2513,5 @@ customappgate-minor.vsix
 customappgate-minor.vsix
 .DS_Store
 .DS_Store
+src/extension copy.js
+src/multiStepInput.js

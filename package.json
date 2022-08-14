@@ -68,6 +68,14 @@
         "command": "customappgate.runnow",
         "title": "run",
         "icon": "$(run)"
+      },
+      {
+        "command": "customappgate.remotecmd",
+        "title": "AG Remote Command"
+      },
+      {
+        "command": "customappgate.clear",
+        "title": "AG terminal clear"
       }
     ],
     "menus": {

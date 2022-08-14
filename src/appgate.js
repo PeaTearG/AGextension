@@ -44,7 +44,8 @@ class prelogin {
          await this.pickProvider(context);
          await this.getUsername(context);
          await this.getPassword();
-        //console.log(this.body); 
+        //console.log(this.body);
+        
     }
 }
 
@@ -99,6 +100,7 @@ class postlogin{
         await context.secrets.delete(this.baseURI)
         await context.secrets.store(this.baseURI, resp.data.token);
         await this.buildheaders(context);
+        //await vscode.window.showInformationMessage(`Authenticated to ${this.baseURI}!`)
     }
     buildheaders = async (context) => {
         this.baseURI = context.environmentVariableCollection.get('URL').value;
@@ -124,6 +126,10 @@ class postlogin{
     customPut = async(apiEndpoint, body) => {
         let resp = await axios.put(`https://${this.baseURI}:8443/admin/${apiEndpoint}`, body, {headers: this.headers})
         return resp.data.data
+    }
+    remoteCMD = async(apiEndpoint, body) => {
+        let resp = await axios.post(`https://${this.baseURI}:8443/admin/${apiEndpoint}`, body, {headers: {Accept:"application/vnd.appgate.peer-v17+text", Authorization: this.headers.Authorization}})
+        return resp.data
     }
 
     userClaimsScript = async (script, context) => {
@@ -242,5 +248,8 @@ function sessDetails(url, creds, dn, succfunc) {
     })
     .catch((error)=>{console.log(error)})
 }
+
+
+
 
 module.exports = {prelogin, postlogin, runScripts, sessDetails, activeSessions, loginProviders, login, headers, authHeaders};
