@@ -93,16 +93,7 @@ vscode.commands.registerCommand('customappgate.revoketokens', async function(e){
 
 
 let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async function multiStepInput() { 
-	class MyButton {
-        constructor(iconPath, tooltip) {
-            this.iconPath = iconPath;
-            this.tooltip = tooltip;
-        }
-    }
-	const loadinterfacesfromtcpdump = new MyButton({
-        dark: vscode.Uri.file(context.asAbsolutePath('resources/dark/add.svg')),
-        light: vscode.Uri.file(context.asAbsolutePath('resources/light/add.svg')),
-    }, 'Load additional interfaces');
+	
 	async function collectInputs() {
         const state = {};
 		await MultiStepInput.run(input => selectAppliance(input, state))
@@ -135,9 +126,12 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 			activeItem: typeof state.command !== 'string' ? state.command: undefined,
 			shouldResume: shouldResume
 		});
+		
 		return (input) => configureCommand(input, state);		
 	}
 	async function configureCommand(input, state){
+		let int = await interfaces(state)
+		
 		if(state.command.label === 'ping' || state.command.label === 'tcpdump'){
 		state.configureCommand = await input.showQuickPick({
 			title,
@@ -145,19 +139,12 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 			totalSteps:4,
 			ignoreFocusOut:true,
 			placeholder: 'select the interface to use',
-			buttons: [loadinterfacesfromtcpdump],
-			items: state.appliance.nics,
+			items: state.command.label === 'ping' ? state.appliance.nics : int,
 			activeItem: typeof state.configuration !== 'string' ? state.configuration: undefined,
 			shouldResume: shouldResume
 		})
 		
-		
-            /* return (input) => moreInts(input, state)
-				async function moreInts(input, state){
-					let ints = await session.remoteCMD(`appliances/${state.appliance.id}/command/tcpdump`, {exprssion: "-D"})
-					console.log(ints)
-				}
-				; */
+
         
 		
 		return(input) => state.command.label === 'ping' ? pingDestination(input, state) : dumpCommands(input, state)
@@ -186,7 +173,7 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 				validate: validateNameIsUnique,
 				shouldResume: shouldResume
 			})
-			console.log(state)
+			
 			return(input) => runRemoteCommand(input, state, {
 				destination: state.pingDestination,
 				interface: state.configureCommand.label
@@ -203,10 +190,9 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 					validate: validateNameIsUnique,
 					shouldResume: shouldResume
 				})
-				return(input) => runRemoteCommand(input, state, {
+				return(input) =>  runRemoteCommand(input, state, {
 					expression: state.dumpCommands,
-					interface: state.configureCommand.label}
-					)
+					interface: state.configureCommand.label})
 			}
 	async function netcatIPversion(input, state){
 		state.netcatIPversion = await input.showQuickPick({
@@ -254,7 +240,19 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 	}
 	async function runRemoteCommand(input, state, body){
 		let resp = await session.remoteCMD(`appliances/${state.appliance.id}/command/${state.command.label}`, body)
-		console.log(await resp)
+		let lines = resp.split(/\r?\n/)
+		await input.showQuickPick({
+			title,
+			step:6,
+			totalSteps:6,
+			enabled:false,
+			items: lines.map(l=>({label:l})),
+			ignoreFocusOut:true,
+			activeItem: typeof state.runRemoteCommand !== 'string' ? state.runRemoteCommand: undefined,
+			validate: validateNameIsUnique,
+			shouldResume: shouldResume
+		})
+
 	}
 	}
 function shouldResume() {
@@ -275,6 +273,10 @@ async function appliances(){
 		id: a.id,
 		networking: a.networking, 
 		nics: a.networking.nics.map((n)=>({label:n.name, enabled: n.enabled}))}))
+}
+async function interfaces(state){
+	let ints = await session.remoteCMD(`appliances/${state.appliance.id}/command/tcpdump`, {expression: "-D"})
+	return ints.match(/(?<=^\d\.)\S+/gm).map(i=>({label:i}))
 }
 	const state = await collectInputs();
 
