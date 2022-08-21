@@ -7,10 +7,6 @@ const DataProvider  = require("./dataProvider.js");
 const selectedClaims = require("./selectedclaims");
 const applancescripts = require("./appliancesidescripts")
 const aglogin = require("./appgate.js");
-
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -39,14 +35,11 @@ function hasBearer(){
 			vscode.commands.executeCommand('customappgate.configure')
 		}
 	}).then(()=>{
-		//this._appliances()
 		vscode.commands.executeCommand('customappgate.sessions')
 		vscode.commands.executeCommand('customappgate.appliancesidescripts')
 	})}
 
 hasBearer() 
-
-
 
 context.environmentVariableCollection.delete('userClaims')
 context.environmentVariableCollection.delete('deviceClaims')
@@ -93,75 +86,75 @@ vscode.commands.registerCommand('customappgate.revoketokens', async function(e){
 
 
 let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async function multiStepInput() { 
-	
 	async function collectInputs() {
         const state = {};
 		await MultiStepInput.run(input => selectAppliance(input, state))
         return state;
     }
 	const title = 'Remote Commands';
+	const allappliances = await appliances()
+	this.commands = ['tcpdump','ping','netcat'].map(l=>({label:l}))
+	const ipVersions = ['ip4', 'ip6'].map(p=>({label:p}));
+	const ipProtocols = ['tcp', 'udp'].map(p=>({label:p}));
+	let commonports = ['443', '80', '3389', '22']
+	function netcatports(cp) {return cp.map(p=>({label:p}))}
 	async function selectAppliance(input, state){
-		const items = await appliances()
-		const pick = await input.showQuickPick({
+		state.appliance = await input.showQuickPick({
 			title,
 			step: 1,
-			totalSteps: 3,
-			items: items,
+			totalSteps: 4,
+			items: allappliances,
 			ignoreFocusOut:true,
 			placeholder: 'Choose an appliance',
-			activeItem: typeof state.appliance !== 'string' ? state.appliance: undefined,
+			activeItem: typeof state.appliance !== 'string' ? state.appliance : undefined,
 			shouldResume: shouldResume
 		});
-		state.appliance = pick;
 		return (input) => selectCommand(input, state);
 	}
 	async function selectCommand(input, state){
 		state.command = await input.showQuickPick({
 			title,
 			step: 2,
-			totalSteps: 3,
+			totalSteps: 4,
 			ignoreFocusOut:true,
-			items: ['tcpdump','ping','netcat'].map(l=>({label:l})),
-			//placeholder: 'Select the command to run',
+			items: this.commands,
+			placeholder: `Select a command to run on ${state.appliance.label}`,
 			activeItem: typeof state.command !== 'string' ? state.command: undefined,
 			shouldResume: shouldResume
 		});
 		
 		return (input) => configureCommand(input, state);		
 	}
-	async function configureCommand(input, state){
-		let int = await interfaces(state)
-		
+
+	async function configureCommand(input, state){	
 		if(state.command.label === 'ping' || state.command.label === 'tcpdump'){
+		var int = await interfaces(state)
 		state.configureCommand = await input.showQuickPick({
 			title,
 			step:3,
 			totalSteps:4,
 			ignoreFocusOut:true,
-			placeholder: 'select the interface to use',
+			placeholder: `${state.command.label} ${state.command.label === "ping" ? "-I" : "-i"} <select interface>`,
 			items: state.command.label === 'ping' ? state.appliance.nics : int,
 			activeItem: typeof state.configuration !== 'string' ? state.configuration: undefined,
 			shouldResume: shouldResume
 		})
-		
-
-        
-		
 		return(input) => state.command.label === 'ping' ? pingDestination(input, state) : dumpCommands(input, state)
 	}
 	else if(state.command.label === 'netcat'){
-		state.configuration = await input.showQuickPick({
+		state.configureCommand = await input.showQuickPick({
 			title,
 			step:3,
 			totalSteps:6,
 			ignoreFocusOut:true,
-			items: ['tcp','udp'].map(p=>({label:p})),
+			items: ipProtocols,
 			placeholder: 'protocol',
-			activeItem: typeof state.configuration !== 'string' ? state.configuration: 'undefined',
+			activeItem: typeof state.configureCommand !== 'string' ? state.configureCommand: 'undefined',
 			shouldResume: shouldResume
 	})
 	return(input) => netcatIPversion(input, state);
-};
+}
+	}
 		async function pingDestination(input, state){
 			state.pingDestination = await input.showInputBox({
 				title,
@@ -174,25 +167,32 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 				shouldResume: shouldResume
 			})
 			
-			return(input) => runRemoteCommand(input, state, {
+			runRemoteCommand(input, state, {
 				destination: state.pingDestination,
 				interface: state.configureCommand.label
 			})
+			input.steps.pop()
+			return(input) => pingDestination(input, state)
 		}
 		async function dumpCommands(input, state){
+			//vscode.showInformationMessage()
 				state.dumpCommands = await input.showInputBox({
 					title,
 					step:4,
 					totalSteps:4,
 					ignoreFocusOut:true,
-					prompt: '(optionally) enter a tcpdump expression to filter results',
+					placeholder: '(optionally) enter a tcpdump expression to filter results',
+					//prompt: new vscode.MarkdownString(`[TCPdump cheatsheet](https://packetlife.net/media/library/12/tcpdump.pdf)  \n`) ,
 					activeItem: typeof state.dumpCommands !== 'string' ? state.dumpCommands: undefined,
-					validate: validateNameIsUnique,
+					validate: validateTCPdump,
 					shouldResume: shouldResume
 				})
-				return(input) =>  runRemoteCommand(input, state, {
+				
+				runRemoteCommand(input, state, {
 					expression: state.dumpCommands,
 					interface: state.configureCommand.label})
+					input.steps.pop()
+					return(input) => dumpCommands(input, state)
 			}
 	async function netcatIPversion(input, state){
 		state.netcatIPversion = await input.showQuickPick({
@@ -201,103 +201,160 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 			totalSteps:6,
 			ignoreFocusOut:true,
 			placeholder: 'select the ip version to use',
-			items: ['ip4', 'ip6'].map(p=>({label:p})),
+			items: ipVersions,
 			activeItem: typeof state.netcatIPversion !== 'string' ? state.netcatIPversion: undefined,
 			shouldResume: shouldResume
 		})
 		return(input) => netcatPort(input, state)
 	}
+	
+	
 	async function netcatPort(input, state){
+		let portselection = await netcatports(commonports)
+		portselection.push({label: "$(add)"})
 		state.netcatPort = await input.showQuickPick({
 			title,
 			step:5,
 			totalSteps:6,
 			ignoreFocusOut:true,
 			placeholder: 'select the port to use',
-			items: ['443', '80', '3389', '2389', '22'].map(p=>({label:p})),
+			items: portselection,//['443', '80', '3389', '2389', '22'].map(p=>({label:p})),
+			//buttons: [portButton],
 			activeItem: typeof state.netcatPort !== 'string' ? state.netcatPort: undefined,
 			shouldResume: shouldResume
 		})
-		return(input) => netcatDestination(input, state)
+		
+			//console.log(`dont add: ${input}`)
+			if(state.netcatPort.label === '$(add)'){
+				return(input) => addportsquestionmark(input, state)
+			}else{
+				return(input) => netcatDestination(input, state)
+			}
+			
 	}
+
+
+	async function addportsquestionmark(input, state){
+		state.netcatPort.label = await input.showInputBox({
+			title,
+			step:5.5,
+			totalSteps:6,
+			ignoreFocusOut:true,
+			prompt: 'enter a valid port number',
+			validate: validatePort,
+			shouldResume: shouldResume
+		})
+		commonports.push(state.netcatPort.label)
+	return(input) => netcatDestination(input, state)
+}
+	
 	async function netcatDestination(input, state){
 		state.netcatDestination = await input.showInputBox({
 			title,
 			step:6,
 			totalSteps:6,
 			ignoreFocusOut:true,
-			prompt: 'enter the destination for netcat',
+			placeHolder: 'enter the destination for netcat',
+			//prompt: netcatDestination,
 			activeItem: typeof state.netcatDestination !== 'string' ? state.netcatDestination: undefined,
 			validate: validateNameIsUnique,
 			shouldResume: shouldResume
 		})
-		return(input) => runRemoteCommand(input, state, {
+		//netcatports.includes(state.netcatDestination) ? {} : netcatports.push(state.netcatDestination)
+		runRemoteCommand(input, state, {
 			destination: state.netcatDestination,
 			port: state.netcatPort.label,
 			version: parseInt(state.netcatIPversion.label.at(-1),10),
-			protocol: state.configuration.label
+			protocol: state.configureCommand.label
 		})
+		input.steps.pop()
+		return(input) => netcatDestination(input, state)
 	}
 	async function runRemoteCommand(input, state, body){
-		let resp = await session.remoteCMD(`appliances/${state.appliance.id}/command/${state.command.label}`, body)
-		let lines = resp.split(/\r?\n/)
-		await input.showQuickPick({
-			title,
-			step:6,
-			totalSteps:6,
-			enabled:false,
-			items: lines.map(l=>({label:l})),
-			ignoreFocusOut:true,
-			activeItem: typeof state.runRemoteCommand !== 'string' ? state.runRemoteCommand: undefined,
-			validate: validateNameIsUnique,
-			shouldResume: shouldResume
+		await vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: `Running ${state.command.label}, may take up to 30 Seconds`,
+			cancellable: false
+		}, ()=>{
+			let resp = session.remoteCMD(`appliances/${state.appliance.id}/command/${state.command.label}`, body)
+			display(resp)
+			return resp
 		})
+		async function display(resp){
+			let data = await resp
+			getoutputChannel().clear();
+		let lines = await data.split(/\r?\n/)
+		lines.forEach(l=>getoutputChannel().appendLine(l))
+		getoutputChannel().show(true);
+		
+		}
 
+		
 	}
-	}
+	
 function shouldResume() {
 	// Could show a notification with the option to resume.
 	return new Promise((resolve, reject) => {
 		// noop
 	});
 }
+
+function validateTCPdump(cmd){
+	let tcpdumpcmdmap = [
+		["-nn", "Don't resolve hostnames or ports"],
+		["-n","Don't resolve hostnames"],
+		["-c","Stop capture after this many packets"],
+		["-e","Print link level header on each line"],
+		["-N","Only print hostname, no domain info"],
+		["-Q","Specify packet direction (in, out, inout)"],
+		["-s","snaplen, 68 bytes is adequate for IP, ICMP, TCP and UDP"],
+		["-ttt", "print the timestamp delta between lines"],
+		["host", "only capture matching hosts, can be prefixed with dst or src"],
+		["net", "only capture matching addresses, works with partial octets"],
+		["port", "only capture matching ports,can be prefixed with dst or src"],
+		["portrange", "only capture within port range"],
+		["proto", "ipv4 or 6: ah, esp, icmp, igmp,  igrp, tcp, udp, etc"],
+		["vlan", "capture only matching vlan"]
+	]
+	//let optionsmessage = ""
+	tcpdumpcmdmap.forEach(c => cmd.includes(c[0]) ? vscode.window.showInformationMessage(c[1]) : null)
+	
+}
 async function validateNameIsUnique(name) {
 	// ...validate...
 	//await new Promise(resolve => setTimeout(resolve, 1000));
 	return undefined;//name === 'vscode' ? 'Name not unique' : undefined;
 }
+function validatePort(port) {
+
+	if(port.length){
+		if(/[^\d]/.test(port)){
+			return "ports must be integers"
+		}else if(65535 >= parseInt(port) < 1){
+			return "Not a valid port number"
+		}
+		else{
+			return undefined
+		}
+	}else{
+		return undefined
+	} 
+	}
 async function appliances(){
 	let app = await session.customGet('appliances')
 	return app.map((a) => ({
 		label:`${a.name} (${a.hostname})`, 
 		id: a.id,
-		networking: a.networking, 
+		networking: a.networking,
 		nics: a.networking.nics.map((n)=>({label:n.name, enabled: n.enabled}))}))
 }
 async function interfaces(state){
 	let ints = await session.remoteCMD(`appliances/${state.appliance.id}/command/tcpdump`, {expression: "-D"})
-	return ints.match(/(?<=^\d\.)\S+/gm).map(i=>({label:i}))
+	//let avail = ints.match(/(?<=^\d\.)\S+/gm).map(i=>({label:i}))
+	//console.log(JSON.stringify(avail))
+	return await ints.match(/(?<=^\d\.)\S+/gm).map(i=>({label:i}))
 }
-	const state = await collectInputs();
-
-	
-	/* let appliances = await session.customGet('appliances')
-	await theone()
-	async function theone(){ 
-		await vscode.window.showQuickPick(await appliances.map(a=>`${a.name} (${a.hostname})`),{canPickMany: false, onDidSelectItem: await command()})
-	}
-	async function command(){
-		session.headers.Accept = 'application/vnd.appgate.peer-v17+text'
-		await vscode.window.showQuickPick(['ping','tcpdump','netcat'], {canPickMany: false, onDidSelectItem: await resp()})
-		session.headers.Accept = 'application/vnd.appgate.peer-v17+json'
-	} 
-	async function resp(){
-		await session.customPost(`appliances/${appliances.filter(f=> theone === `${f.name} (${f.hostname})`)[0].id}/command/${command}`, {destination: "8.8.8.8", interface: "eth0"})
-	}  */
-	//.then(result=>console.log(result.content))
-	//console.log(await resp)
-	
-	//console.log(appliances.filter(f=> theone === `${f.name} (${f.hostname})`))
+	await collectInputs();
 })
 
 
@@ -361,10 +418,6 @@ let configure = vscode.commands.registerCommand('customappgate.configure', async
 		}
 		getoutputChannel().show(true);
 	})
-	
-
-
-
 
 	let entitlementScript = vscode.commands.registerCommand('customappgate.entitlementScript', async function() {
 		getoutputChannel().clear();
@@ -440,7 +493,9 @@ class MultiStepInput {
             this.current.dispose();
         }
     }
-    async showQuickPick({ title, step, totalSteps, items, activeItem, placeholder, buttons, shouldResume }) {
+	
+	
+    async showQuickPick({ title, step, totalSteps, items, activeItem, placeholder, buttons, shouldResume}) {
         const disposables = [];
         try {
             return await new Promise((resolve, reject) => {
@@ -452,6 +507,7 @@ class MultiStepInput {
                 input.placeholder = placeholder;
                 input.items = items;
                 if (activeItem) {
+					//console.log(activeItem)
                     input.activeItems = [activeItem];
                 }
                 input.buttons = [
@@ -465,7 +521,8 @@ class MultiStepInput {
                     else {
                         resolve(item);
                     }
-                }), input.onDidChangeSelection(items => resolve(items[0])), input.onDidHide(() => {
+                }), 
+				input.onDidChangeSelection(items => resolve(items[0])), input.onDidHide(() => {
                     (async () => {
                         reject(shouldResume && await shouldResume() ? InputFlowAction.resume : InputFlowAction.cancel);
                     })()
@@ -482,7 +539,7 @@ class MultiStepInput {
             disposables.forEach(d => d.dispose());
         }
     }
-    async showInputBox({ title, step, totalSteps, value, prompt, validate, buttons, shouldResume }) {
+    async showInputBox({ title, step, totalSteps, value, prompt, validate, buttons, shouldResume}) {
         const disposables = [];
         try {
             return await new Promise((resolve, reject) => {
