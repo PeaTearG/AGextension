@@ -14,6 +14,8 @@ class appliancesidescripts {
   refresh(){
     this._onDidChangeTreeData.fire();
   }
+ 
+
   getTreeItem(element){
     return element;
   }
@@ -47,6 +49,21 @@ countbyportOrType(scriptname){
 return count
 }
 
+/* async resolveTreeItem(element) {
+
+
+  console.log(element)
+  //await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // const data = await vscode.workspace.fs.readFile(vscode.Uri.file('/Users/jrieken/Code/vscode/README.md'));
+  //element.tooltip = new vscode.MarkdownString()
+  await element.appendCodeblock(JSON.stringify(element.toExpand, null 2), 'javascript')
+  
+
+  return element;
+} */
+
+
 async countbyappShortcut(scriptid){
   this.hasOwnProperty('entitlements') ? undefined : this.entitlements = await this.session.customGet('entitlements');
   let count = await this.entitlements.filter(entitlement=>
@@ -77,6 +94,8 @@ async countbycriteria(scriptname){
   return count
 }
 
+
+
  async getChildren(element){
     if(element){
      
@@ -97,9 +116,10 @@ async countbycriteria(scriptname){
             subclaim['toExpand'] = i['expression']
             subclaim['scriptType'] = i.type;
             subclaim.tooltip = new vscode.MarkdownString();
+            
             if(i.type === 'appShortcut'){
               subclaim.contextValue = await this.countbyappShortcut(i['id']);
-              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://${this.session.baseURI}:8443/ui/access/entitlements/edit/${e.id})  \n`))
+              subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://${this.session.baseURI}:8443/ui/access/entitlements/edit/${e.id}) \n`))
               subclaim['scriptfamily'] = element.scriptfamily;
             }else if(i.type === 'host'){
               subclaim.contextValue = await this.countbyhost(i['name'])
@@ -122,6 +142,7 @@ async countbycriteria(scriptname){
               subclaim.contextValue.forEach(e=>subclaim.tooltip.appendMarkdown(`[${e.name}](https://${this.session.baseURI}:8443/ui/access/entitlements/edit/${e.id})  \n`))
               subclaim['scriptfamily'] = element.label;
             }
+            //subclaim.tooltip.appendCodeblock(`\n  ${i['expression']}  \n`, 'javascript')
             subclaim.iconPath = new vscode.ThemeIcon(scripticonmap[element.label]);
             subclaim.label += ` (${subclaim.contextValue.length})`
             subclaim.contextValue = 'script'

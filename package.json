@@ -25,6 +25,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "customappgate.policyanalyizer",
+        "title": "Analyize Policies"
+      },
+      {
         "command": "customappgate.configure",
         "title": "Configure AG Scripter"
       },
@@ -80,6 +84,7 @@
     ],
     "menus": {
       "commandPalette": [
+        
         {
           "command": "customappgate.userClaimsScript"
         },
@@ -102,9 +107,19 @@
           "command": "customappgate.sessions",
           "group": "navigation",
           "when": "view == activesessions"
+        },
+        {
+          "command": "customappgate.policyanalyizer",
+          "group": "navigation",
+          "when": "customappgate.claimsselected"
         }
       ],
       "view/item/context": [
+        {
+          "command": "customappgate.policyanalyizer",
+          "when": "customappgate.claimsselected && viewItem == asession",
+          "group": "inline"
+        },
         {
           "command": "customappgate.setclaims",
           "when": "view == activesessions && viewItem == asession",
@@ -131,6 +146,11 @@
     "views": {
       "appgate-explorer": [
         {
+          "id": "policyAnalyzer",
+          "name": "Policy Analyzer",
+          "when": "customappgate.claimsselected"
+        },
+        {
           "id": "appliancesidescripts",
           "name": "Scripts on Controller"
         },
@@ -145,6 +165,7 @@
       ]
     },
     "viewsContainers": {
+    
       "activitybar": [
         {
           "id": "appgate-explorer",

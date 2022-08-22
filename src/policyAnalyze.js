@@ -41,7 +41,7 @@ class policyAnalyzer {
 
 
 
-  makematches(element){
+  /* makematches(element){
     let data = element.toExpand
       data.forEach(async (p) => {
         const result = this.session.conditionTest(p.expression, this.claims)
@@ -57,10 +57,10 @@ class policyAnalyzer {
     const evaluations = await Promise.all(element.toExpand.map(async (i) => {
       let resp = await this.session.conditionTest(i.expression, this.claims)
       return  resp.result ? this[element.contextValue].push(i) : i;/* `{${resp.result}:${i}}` ;*/
-    }));
+  /*   }));
     return evaluations
-  }
-
+  } */
+ 
   async getEntitlements(){
     if (!this.hasOwnProperty('entitlements')){
     this.entitlements = await this.session.customGet('entitlements')

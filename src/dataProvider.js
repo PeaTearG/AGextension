@@ -26,6 +26,8 @@ class DataProvider {
       //claimTypes.reduce((acc, t)=>(acc, t)){
       let newclaim = new vscode.TreeItem(claimtype, vscode.TreeItemCollapsibleState.Collapsed)
       newclaim['toExpand'] = claims[claimtype];
+      newclaim.tooltip = new vscode.MarkdownString()
+      newclaim.tooltip.appendCodeblock(JSON.stringify(claims[claimtype], null, 2), 'json')
       newclaim.iconPath = new vscode.ThemeIcon(claimiconmap[claimtype]);
       array.push(newclaim)
     }
@@ -43,6 +45,8 @@ class DataProvider {
         for (let i of Object.keys(element.toExpand)){
           let subclaim = typeof element.toExpand[i] === "object" ? new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Collapsed) : new vscode.TreeItem(`{${i}: ${element.toExpand[i]}}`);
           subclaim['toExpand'] = element.toExpand[i];
+          subclaim.tooltip = new vscode.MarkdownString()
+          subclaim.tooltip.appendCodeblock(JSON.stringify(element.toExpand[i], null, 2), 'json')
           subclaim.iconPath = element.iconPath;
           array.push(subclaim)
         }

@@ -6,6 +6,7 @@ const vscode = require('vscode');
 const DataProvider  = require("./dataProvider.js");
 const selectedClaims = require("./selectedclaims");
 const applancescripts = require("./appliancesidescripts")
+const policyAnalyzer = require("./policyAnalyze")
 const aglogin = require("./appgate.js");
 /**
  * @param {vscode.ExtensionContext} context
@@ -45,6 +46,12 @@ context.environmentVariableCollection.delete('userClaims')
 context.environmentVariableCollection.delete('deviceClaims')
 context.environmentVariableCollection.delete('systemClaims')
 
+vscode.commands.registerCommand('customappgate.policyanalyizer', async () => {
+	var policytree = new policyAnalyzer(session, selected.claims)
+	vscode.window.createTreeView("policyAnalyzer", {
+		treeDataProvider: policytree
+	})
+})
 
 vscode.commands.registerCommand("customappgate.appliancesidescripts",
     async function () {
@@ -67,12 +74,11 @@ vscode.commands.registerCommand("customappgate.appliancesidescripts",
 vscode.commands.registerCommand('customappgate.sessions', async function(){
 	let myData = new DataProvider(session);
 	await vscode.window.createTreeView("activesessions", {treeDataProvider: myData});
-	myData.refresh();		
+			
 }
 )
 
 vscode.commands.registerCommand('customappgate.revoketokens', async function(e){
-	console.log(e)
 	//https://appgate.company.com:8443/admin/token-records/revoked/by-dn/{distinguished-name}
 	let body = {
 		revocationReason: "Triggered",
@@ -375,6 +381,20 @@ vscode.commands.registerCommand('customappgate.edit', async function (e) {
 	openInUntitled(e.toExpand, 'javascript')
 })
 async function openInUntitled(content, language) {
+	
+    const document = await vscode.workspace.openTextDocument({
+        language,
+		content
+    });
+	vscode.window.showTextDocument()
+    vscode.window.showTextDocument(document);
+}
+
+vscode.commands.registerCommand('customappgate.preview', async function (e) {
+	openInUntitled(e.toExpand, 'javascript')
+})
+async function openInUntitled(content, language) {
+	
     const document = await vscode.workspace.openTextDocument({
         language,
 		content
@@ -385,22 +405,25 @@ async function openInUntitled(content, language) {
 let configure = vscode.commands.registerCommand('customappgate.configure', async function() {
 
 	//vscode.commands.executeCommand('workbench.actions.treeView.activesessions.collapseAll');
-
+	//await hasBearer()
 	await authprep.build(context);
 	await session.url(authprep.baseURI);
 	await session.authenticate(authprep.body, context)
 
 }
 )
-	
+
+
+
 
 	let setscriptsclaims = vscode.commands.registerCommand('customappgate.setclaims', async function(e) {
 		await myData.getChildren(e);
 		myData.refresh();
 		vscode.window.createTreeView("selectedclaims", {treeDataProvider: selected});
+		
 		selected.getclaims(e.claims)
 		selected.refresh();	
-		return
+		vscode.commands.executeCommand('setContext', 'customappgate.claimsselected', true);
 	})
 	let clearclaims = vscode.commands.registerCommand('customappgate.clearclaims', function () {
 		selected.getclaims({userClaims: "", deviceClaims: "", systemClaims: ""});
@@ -454,7 +477,7 @@ class InputFlowAction {
 InputFlowAction.back = new InputFlowAction();
 InputFlowAction.cancel = new InputFlowAction();
 InputFlowAction.resume = new InputFlowAction();
-class MultiStepInput {
+class  MultiStepInput {
     constructor() {
         this.steps = [];
     }

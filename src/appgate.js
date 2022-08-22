@@ -237,7 +237,12 @@ function runScripts(url, creds, body, apiendpoint, succFunc) {
     })
 }
 
-
+function conditionTest(expression, claims){
+    axios.post(`https://${this.url}:8443/admin/conditions/test`, body, {headers: authHeaders(creds)})
+    .then(({data})=> {
+        succFunc(data)
+    })
+}
 
 function sessDetails(url, creds, dn, succfunc) {
     axios.get(`https://${url}:8443/admin/session-info/${dn}`,

@@ -6,6 +6,8 @@ class selectedClaims {
     this._onDidChangeTreeData = new vscode.EventEmitter();
     this.onDidChangeTreeData = this._onDidChangeTreeData.event;
     this.claims = "";
+    this._onDidChangeSelection = new vscode.EventEmitter()
+    this.onDidChangeSelection = this._onDidChangeSelection
   }
   refresh(){
     this._onDidChangeTreeData.fire();
@@ -14,6 +16,7 @@ class selectedClaims {
     this.claims = claims;
   }
   getTreeItem(element){
+
     return element;
   }
  getChildren(element){
@@ -23,6 +26,8 @@ class selectedClaims {
             let subclaim = typeof element.toExpand[i] === "object" ? new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Expanded) : new vscode.TreeItem(`${i}: ${element.toExpand[i]}`);
             subclaim['toExpand'] = element.toExpand[i]
             subclaim.contextValue = element.contextValue;
+            subclaim.tooltip = new vscode.MarkdownString()
+            subclaim.tooltip.appendCodeblock(JSON.stringify(subclaim['toExpand'], null, 2), 'json')
             array.push(subclaim)
         }
         return array
@@ -33,6 +38,8 @@ class selectedClaims {
           let subclaim = new vscode.TreeItem(i, vscode.TreeItemCollapsibleState.Expanded)
           subclaim['toExpand'] = this.claims[i]
           subclaim.contextValue = i;
+          subclaim.tooltip = new vscode.MarkdownString()
+          subclaim.tooltip.appendCodeblock(JSON.stringify(subclaim['toExpand'], null, 2), 'json')
           array.push(subclaim)
         }
         return array
