@@ -56,8 +56,8 @@ class policyAnalyzer {
   async runtest(element){
     const evaluations = await Promise.all(element.toExpand.map(async (i) => {
       let resp = await this.session.conditionTest(i.expression, this.claims)
-      return  resp.result ? this[element.contextValue].push(i) : i;/* `{${resp.result}:${i}}` ;*/
-   }));
+      return  resp.result ? this[element.contextValue].push(i) : i;/* `{${resp.result}:${i}}` ; */
+   }))
     return evaluations
   }
  
