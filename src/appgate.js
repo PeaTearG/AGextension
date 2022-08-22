@@ -137,6 +137,12 @@ class postlogin{
         let resp = await this.runScripts(':8443/admin/user-scripts/test', body.format())
         return resp.data;
     }
+
+    conditionTest = async (script, claims) => {
+        let body = new scriptBody(script, claims);
+        let resp = await this.runScripts(':8443/admin/conditions/test', body.format())
+        return resp.data;
+    }
     
     entitlementScript = async (script, context) => {
         let type = await vscode.window.showQuickPick(['host', 'portOrType', 'appShortcut'])
@@ -237,12 +243,7 @@ function runScripts(url, creds, body, apiendpoint, succFunc) {
     })
 }
 
-function conditionTest(expression, claims){
-    axios.post(`https://${this.url}:8443/admin/conditions/test`, body, {headers: authHeaders(creds)})
-    .then(({data})=> {
-        succFunc(data)
-    })
-}
+
 
 function sessDetails(url, creds, dn, succfunc) {
     axios.get(`https://${url}:8443/admin/session-info/${dn}`,
