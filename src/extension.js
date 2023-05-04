@@ -338,6 +338,7 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 function shouldResume() {
 	// Could show a notification with the option to resume.
 	return new Promise((resolve, reject) => {
+		console.log(JSON.stringify(resolve, reject))
 		// noop
 	});
 }
@@ -365,6 +366,9 @@ function validateTCPdump(cmd){
 }
 async function validateNameIsUnique(name) {
 	// ...validate...
+	if(name){
+
+	}
 	//await new Promise(resolve => setTimeout(resolve, 1000));
 	return undefined;//name === 'vscode' ? 'Name not unique' : undefined;
 }

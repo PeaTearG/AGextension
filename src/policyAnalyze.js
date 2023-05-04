@@ -93,8 +93,10 @@ class policyAnalyzer {
       return this[element.contextValue].map(m=>{
         let n = new vscode.TreeItem(`${m.name}`, m.type === 'Access' ? vscode.TreeItemCollapsibleState.Collapsed: vscode.TreeItemCollapsibleState.None)
         n.tooltip = new vscode.MarkdownString()
-        n.tooltip.appendMarkdown(`https://${this.session.baseURI}:8443/ui/access/policies/edit/${m.id}`)
-        n.tooltip.appendCodeblock(JSON.stringify(m.dnsSettings, null, 2), 'json')
+        n.tooltip.appendMarkdown(`[${m.name}](https://${this.session.baseURI}:8443/ui/access/policies/edit/${m.id})`)
+        if(m.dnsSettings.length){
+          n.tooltip.appendCodeblock(JSON.stringify(m.dnsSettings, null, 2), 'json')
+        }
         if(m.disabled){
           n.iconPath = new vscode.ThemeIcon('warning')
         }

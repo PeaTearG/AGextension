@@ -75,7 +75,7 @@
       },
       {
         "command": "customappgate.remotecmd",
-        "title": "AG Remote Command"
+        "title": "Appgate Remote Command"
       },
       {
         "command": "customappgate.clear",
