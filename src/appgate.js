@@ -138,12 +138,18 @@ class postlogin{
         return resp.data;
     }
 
-    conditionTest = async (script, claims) => {
+    conditions = async (script, claims) => {
         let body = new scriptBody(script, claims);
         let resp = await this.runScripts(':8443/admin/conditions/test', body.format())
         return resp.data;
     }
-    
+
+    criteriaScript = async (script, claims) => {
+        let body = new scriptBody(script, claims);
+        let resp = await this.runScripts(':8443/admin/conditions/test', body.format())
+        return resp.data;
+    }
+
     entitlementScript = async (script, context) => {
         let type = await vscode.window.showQuickPick(['host', 'portOrType', 'appShortcut'])
         let body = new entitlementScriptBody(script, context)
