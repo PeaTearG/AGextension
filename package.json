@@ -3,7 +3,7 @@
   "displayName": "customappgate",
   "publisher": "PeaTearG",
   "description": "",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "icon": "src/polygon13.png",
   "repository": {
     "type": "git",
@@ -84,7 +84,6 @@
     ],
     "menus": {
       "commandPalette": [
-        
         {
           "command": "customappgate.userClaimsScript"
         },
@@ -165,7 +164,6 @@
       ]
     },
     "viewsContainers": {
-    
       "activitybar": [
         {
           "id": "appgate-explorer",
