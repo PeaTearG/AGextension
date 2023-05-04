@@ -51,12 +51,12 @@
       },
       {
         "command": "customappgate.entitlementScript",
-        "title": "Run as entitlementScript",
+        "title": "Appgate: Run as entitlementScript",
         "shortTitle": "entitlementScript"
       },
       {
         "command": "customappgate.userClaimsScript",
-        "title": "Run as userClaimsScript",
+        "title": "Appgate: Run as userClaimsScript",
         "shortTitle": "userClaimsScript"
       },
       {
