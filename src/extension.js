@@ -99,7 +99,7 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
     }
 	const title = 'Remote Commands';
 	const allappliances = await appliances()
-	this.commands = ['tcpdump','ping','netcat'].map(l=>({label:l}))
+	this.commands = ['tcpdump','ping','netcat', 'dig'].map(l=>({label:l}))
 	const ipVersions = ['ip4', 'ip6'].map(p=>({label:p}));
 	const ipProtocols = ['tcp', 'udp'].map(p=>({label:p}));
 	let commonports = ['443', '80', '3389', '22']
@@ -159,8 +159,45 @@ let remotecmd = vscode.commands.registerCommand('customappgate.remotecmd', async
 			shouldResume: shouldResume
 	})
 	return(input) => netcatIPversion(input, state);
+}else if(state.command.label === 'dig'){
+		state.configureCommand = await input.showInputBox({
+					title,
+					step:3,
+					totalSteps:4,
+					ignoreFocusOut:true,
+					prompt: 'enter the FQDN to resolve',
+					//prompt: new vscode.MarkdownString(`[TCPdump cheatsheet](https://packetlife.net/media/library/12/tcpdump.pdf)  \n`) ,
+					activeItem: typeof state.configureCommand !== 'string' ? state.configureCommand: undefined,
+					validate: validateTCPdump,
+					shouldResume: shouldResume
+				})
+	return(input) => digNameServer(input, state);
 }
+
 	}
+	async function digNameServer(input, state){
+			state.digNameServer = await input.showInputBox({
+				title,
+				step:4,
+				totalSteps:4,
+				ignoreFocusOut:true,
+				prompt: 'enter the name server to resolve against',
+				activeItem: typeof state.digNameServer !== 'string' ? state.digNameServer: undefined,
+				validate: validateNameIsUnique,
+				shouldResume: shouldResume
+			})
+			
+			console.log(JSON.stringify(state.digNameServer))
+			console.log(JSON.stringify(state.configureCommand))
+			runRemoteCommand(input, state, {
+				server: state.digNameServer,
+				host: state.configureCommand,
+				type: "A",
+				protocol: "UDP"
+			})
+			input.steps.pop()
+			return(input) => configureCommand(input, state)
+		}
 		async function pingDestination(input, state){
 			state.pingDestination = await input.showInputBox({
 				title,
