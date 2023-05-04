@@ -144,6 +144,12 @@ class postlogin{
         return resp.data;
     }
 
+     conditionTest = async (script, claims) => {
+        let body = new scriptBody(script, claims);
+        let resp = await this.runScripts(':8443/admin/conditions/test', body.format())
+        return resp.data;
+    }
+
     criteriaScript = async (script, claims) => {
         let body = new scriptBody(script, claims);
         let resp = await this.runScripts(':8443/admin/conditions/test', body.format())

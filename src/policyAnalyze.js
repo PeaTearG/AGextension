@@ -30,7 +30,6 @@ class policyAnalyzer {
     for (let policy of policyType){
       let newclaim = new vscode.TreeItem(policy, vscode.TreeItemCollapsibleState.Collapsed)
       let current = await this.policies
-      
       newclaim['toExpand'] = current.filter(p => p.type === policy);
       newclaim.contextValue = policy
       newclaim.label = `${newclaim.toExpand.length} ${newclaim.label}`
@@ -96,6 +95,9 @@ class policyAnalyzer {
         n.tooltip = new vscode.MarkdownString()
         n.tooltip.appendMarkdown(`https://${this.session.baseURI}:8443/ui/access/policies/edit/${m.id}`)
         n.tooltip.appendCodeblock(JSON.stringify(m.dnsSettings, null, 2), 'json')
+        if(m.disabled){
+          n.iconPath = new vscode.ThemeIcon('warning')
+        }
         n.contextValue = m
         //n.push(element)
         return n
