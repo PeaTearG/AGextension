@@ -3,7 +3,7 @@
   "displayName": "customappgate",
   "publisher": "PeaTearG",
   "description": "",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "icon": "src/polygon13.png",
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
       },
       {
         "command": "customappgate.configure",
-        "title": "Configure AG Scripter"
+        "title": "Appgate Configure Collective"
       },
       {
         "command": "customappgate.appliancesidescripts",
@@ -58,6 +58,11 @@
         "command": "customappgate.userClaimsScript",
         "title": "Appgate: Run as userClaimsScript",
         "shortTitle": "userClaimsScript"
+      },
+      {
+        "command": "customappgate.conditionScript",
+        "title": "Appgate: test condition",
+        "shortTitle": "testCondition"
       },
       {
         "command": "customappgate.sessions",

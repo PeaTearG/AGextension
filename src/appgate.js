@@ -9,12 +9,12 @@ class prelogin {
         };
         this.providers = [];
         this.headers = {
-            Accept: "application/vnd.appgate.peer-v16+json",
+            Accept: "application/vnd.appgate.peer-v18+json",
             "Content-Type": "application/json",
           };
     }
     controller = async (context) => {
-        this.baseURI = await vscode.window.showInputBox({placeHolder: "controller url", 'ignoreFocusOut': true, value: context.environmentVariableCollection.get('URL') ? context.environmentVariableCollection.get('URL').value : null}); 
+        this.baseURI = await vscode.window.showInputBox({placeHolder: "controller hostname", 'ignoreFocusOut': true, value: context.environmentVariableCollection.get('URL') ? context.environmentVariableCollection.get('URL').value : null}); 
         context.environmentVariableCollection.append('URL', this.baseURI);
         return this.baseURI;
     }

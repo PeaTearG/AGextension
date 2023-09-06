@@ -474,7 +474,20 @@ let configure = vscode.commands.registerCommand('customappgate.configure', async
 		getoutputChannel().clear();
 		let data = await session.userClaimsScript( vscode.window.activeTextEditor.document.getText(), selected.claims);
 		for (let i in data) {
+			//getoutputChannel().appendLine("_".repeat(100-i.length) + i);
+			getoutputChannel().appendLine("");
+			(i === 'executionMs') ? getoutputChannel().appendLine(data[i]) : (i === 'result')? getoutputChannel().appendLine(JSON.stringify(data[i])) : getoutputChannel().append(data[i]);
+			
 			getoutputChannel().appendLine("_".repeat(100-i.length) + i);
+			getoutputChannel().appendLine("");
+		}
+		getoutputChannel().show(true);
+	})
+	let conditionScript = vscode.commands.registerCommand('customappgate.conditionScript', async function () {
+		getoutputChannel().clear();
+		let data = await session.conditionTest( vscode.window.activeTextEditor.document.getText(), selected.claims);
+		for (let i in data) {
+			//getoutputChannel().appendLine("_".repeat(100));
 			getoutputChannel().appendLine("");
 			(i === 'executionMs') ? getoutputChannel().appendLine(data[i]) : (i === 'result')? getoutputChannel().appendLine(JSON.stringify(data[i])) : getoutputChannel().append(data[i]);
 			getoutputChannel().appendLine("_".repeat(100-i.length) + i);
@@ -503,7 +516,7 @@ let configure = vscode.commands.registerCommand('customappgate.configure', async
 		return _channel
 	}
 	
-	context.subscriptions.push(remotecmd, configure,/* onappliancescripts, */setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
+	context.subscriptions.push(conditionScript, remotecmd, configure,/* onappliancescripts, */setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
 
 }
 
