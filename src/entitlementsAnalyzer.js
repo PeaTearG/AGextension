@@ -34,35 +34,57 @@ class entitlementsAnalyzer {
     //const policyType = ["Access", "Admin", "Device", "Dns", "Mixed"]
     //let entitlements = await this.getEntitlementsOfSite(element.label)
     let array = [];
+    let unassignedentitlement = new vscode.TreeItem("**unassigned entitlements**", vscode.TreeItemCollapsibleState.Collapsed)
+    unassignedentitlement['entitlements'] = []
+    unassignedentitlement.contextValue = "unassigned"
     for (let entitlement of element.entitlements){
       let policies = await this.getPoliciesofEntitlement(entitlement)
-      let newentitlement = new vscode.TreeItem(entitlement.name)
-      if (policies.length > 0){
-        newentitlement.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
-        newentitlement['policies'] = policies
-      }
+      let newentitlement = new vscode.TreeItem(`  ${entitlement.name}`)
       newentitlement['tags'] = entitlement.tags
-      newentitlement['id'] = entitlement.id
+      newentitlement['agid'] = entitlement.id
       newentitlement['disabled'] = entitlement.disabled
       newentitlement.contextValue = "entitlement"
       //newentitlement.label = entitlement.name
       newentitlement.tooltip = new vscode.MarkdownString()
       newentitlement.tooltip.appendMarkdown(`[open ${entitlement.name} in browser](https://${this.session.baseURI}:8443/ui/access/entitlements/edit/${entitlement.id})`)
       newentitlement.tooltip.appendCodeblock(JSON.stringify(entitlement.actions, null, 2), 'json')
-      array.push(newentitlement)
+      if (policies.length == 0){
+        unassignedentitlement['entitlements'].push(newentitlement)
+      }else{
+        newentitlement.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+        newentitlement['policies'] = policies
+        array.push(newentitlement)
+      }
+      
     }
+    array.push(unassignedentitlement)
     return array;
   }
   async definePolicies(element){
     //let policies = await this.getPoliciesofEntitlement(element)
     let array = []
     for (let policy of element.policies){
-      let newpolicy = new vscode.TreeItem(policy.name)
-      newpolicy.contextValue = "policy"
+      let newpolicy = new vscode.TreeItem(` ${policy.name}`)
+      newpolicy.contextValue = policy.contextValue
+      //newpolicy['contextV'] = "policy"
       //newpolicy.label = policy.name
+      if (policy['contextValue'] === "bytag"){
+        newpolicy.iconPath = new vscode.ThemeIcon("tag")
+      }else if(policy['contextValue'] === "byname"){
+        newpolicy.iconPath = new vscode.ThemeIcon("arrow-both")
+      }
       newpolicy.tooltip = new vscode.MarkdownString()
-      newpolicy.tooltip.appendMarkdown(`[open ${policy.name} in browser](https://${this.session.baseURI}:8443/ui/access/policies/edit/${policy.id})`)
-      newpolicy.tooltip.appendCodeblock(JSON.stringify(policy.expression, null, 2), 'javascript')
+      newpolicy.tooltip.appendMarkdown(`[open policy "${policy.name}" in browser](https://${this.session.baseURI}:8443/ui/access/policies/edit/${policy.id})`)
+      newpolicy.tooltip.appendCodeblock(JSON.stringify(`entitlement tags: ${policy.entitlementLinks}`, null, 2), 'javascript')
+      policy['entitlementNames'] = []
+      for (let entitlementid of policy.entitlements){
+        for (let entitlement of await this.entitlements){
+          if (entitlement.agid === entitlementid){
+            policy.entitlementNames.push(entitlement.name)
+          }
+        }
+      }
+      newpolicy.tooltip.appendCodeblock(JSON.stringify(`named entitlements: ${policy.entitlementNames}`, null, 2), 'javascript')
       array.push(newpolicy)
     }
     return array;
@@ -96,7 +118,7 @@ class entitlementsAnalyzer {
     for (let site of await this.sites){
       let entitlements = await this.getEntitlementsOfSite(site.name)
       let appliances = await this.getGatewaysOfSite(site.name)
-      let newsite = new vscode.TreeItem(`         ${site.name}`)
+      let newsite = new vscode.TreeItem(`${site.name}`)
       if (entitlements.length > 0){
         newsite.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
         newsite["entitlements"] = entitlements
@@ -123,14 +145,14 @@ class entitlementsAnalyzer {
       }
     }
     if (noentitlements.length > 0){
-      let entitlementlesssite = new vscode.TreeItem("Entitlementless Sites")
+      let entitlementlesssite = new vscode.TreeItem("**Entitlementless Sites**")
       entitlementlesssite.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
       entitlementlesssite.contextValue = "noentitlements"
       entitlementlesssite['sites'] = noentitlements
       array.push(entitlementlesssite)
     }
     if (nogateways.length > 0){
-      let gatewaylesssite = new vscode.TreeItem("Gatewayless Sites")
+      let gatewaylesssite = new vscode.TreeItem("**Gatewayless Sites**")
       gatewaylesssite.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
       gatewaylesssite.contextValue = "nogateways"
       gatewaylesssite['sites'] = nogateways
@@ -161,10 +183,12 @@ class entitlementsAnalyzer {
     let array = []
     for (let policy of await this.policies){
       if(policy.entitlements.includes(entitlement.id)){
+        policy['contextValue'] = "byname"
         array.push(policy)
       }
       for (let tag of entitlement.tags){
         if(policy.entitlementLinks.includes(tag)){
+          policy['contextValue'] = "bytag"
           array.push(policy)
         }
       }
@@ -179,6 +203,9 @@ class entitlementsAnalyzer {
       }
       else if(element.contextValue === "entitlement"){
         return await this.definePolicies(element)
+      }
+      else if(element.contextValue === "unassigned"){
+        return await element['entitlements']
       }
       else if(element.contextValue === "noentitlements"){
         return  await this.defineEntitlementLessSite(element)
