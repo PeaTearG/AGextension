@@ -7,6 +7,7 @@ const DataProvider  = require("./dataProvider.js");
 const selectedClaims = require("./selectedclaims");
 const applancescripts = require("./appliancesidescripts")
 const policyAnalyzer = require("./policyAnalyze")
+const entitlementsAnalyzer = require("./entitlementsAnalyzer.js")
 const aglogin = require("./appgate.js");
 /**
  * @param {vscode.ExtensionContext} context
@@ -49,6 +50,12 @@ context.environmentVariableCollection.delete('systemClaims')
 vscode.commands.registerCommand('customappgate.policyanalyizer', async () => {
 	var policytree = new policyAnalyzer(session, selected.claims)
 	vscode.window.createTreeView("policyAnalyzer", {
+		treeDataProvider: policytree
+	})
+})
+let entitlementsanalyizer = vscode.commands.registerCommand('customappgate.entitlementsanalyizer', async () => {
+	var policytree = new entitlementsAnalyzer(session)
+	vscode.window.createTreeView("entitlementsAnalyzer", {
 		treeDataProvider: policytree
 	})
 })
@@ -516,7 +523,7 @@ let configure = vscode.commands.registerCommand('customappgate.configure', async
 		return _channel
 	}
 	
-	context.subscriptions.push(conditionScript, remotecmd, configure,/* onappliancescripts, */setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
+	context.subscriptions.push(entitlementsanalyizer, conditionScript, remotecmd, configure,/* onappliancescripts, */setscriptsclaims, entitlementScript, userClaimsScript, clearclaims);
 
 }
 

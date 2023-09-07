@@ -29,6 +29,10 @@
         "title": "Analyize Policies"
       },
       {
+        "command": "customappgate.entitlementsanalyizer",
+        "title": "run"
+      },
+      {
         "command": "customappgate.configure",
         "title": "Appgate Configure Collective"
       },
@@ -116,6 +120,10 @@
           "command": "customappgate.policyanalyizer",
           "group": "navigation",
           "when": "customappgate.claimsselected"
+        },
+        {
+          "command": "customappgate.entitlementsanalyizer",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -153,6 +161,10 @@
           "id": "policyAnalyzer",
           "name": "Policy Analyzer",
           "when": "customappgate.claimsselected"
+        },
+        {
+          "id": "entitlementsAnalyzer",
+          "name": "Entitlements Analyzer"
         },
         {
           "id": "appliancesidescripts",
