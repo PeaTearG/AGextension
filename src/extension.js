@@ -27,19 +27,21 @@ var selected = new selectedClaims();
 	}
 	return context.secrets.get(session.baseURI)
 }
-function hasBearer(){
-	getURL()
-	.then((t)=>{
-		if(t){
-		vscode.window.showInformationMessage(`existing session found for ${session.baseURI}`)
-		session.headers['Authorization'] = `Bearer ${t}`
+async function hasBearer(){
+	//getURL()
+	//.then((t)=>{
+		let authresp = await getURL()
+		let now = new Date()
+		if(JSON.parse(authresp).expires > now.toISOString()){
+		vscode.window.showInformationMessage(`existing token found for ${session.baseURI}`)
+		session.headers['Authorization'] = `Bearer ${JSON.parse(authresp).token}`
 		}else{
 			vscode.commands.executeCommand('customappgate.configure')
 		}
-	}).then(()=>{
-		vscode.commands.executeCommand('customappgate.sessions')
+	}//).then(()=>{
+		//vscode.commands.executeCommand('customappgate.sessions')
 		vscode.commands.executeCommand('customappgate.appliancesidescripts')
-	})}
+	//})}
 
 hasBearer() 
 
@@ -60,6 +62,8 @@ let entitlementsanalyizer = vscode.commands.registerCommand('customappgate.entit
 		treeDataProvider: policytree
 	})
 })
+
+
 
 vscode.commands.registerCommand("customappgate.appliancesidescripts",
     async function () {

@@ -62,7 +62,7 @@ class postlogin{
     }
     do = async (body, context) => {
         let resp = await axios.post(`https://${this.baseURI}:8443/admin/login`, body, {headers: this.headers})
-        await context.secrets.store(this.baseURI, resp.data.token);
+        await context.secrets.store(this.baseURI, JSON.stringify(await resp.data));
         if (resp.status == 200) {
             vscode.window.showInformationMessage('Authentication Successful')
         }
@@ -70,7 +70,7 @@ class postlogin{
     }
     authenticate = async (body, context) => {
         let resp = await axios.post(`https://${this.baseURI}:8443/admin/authentication`, body, {headers: this.headers})
-        await context.secrets.store(this.baseURI, resp.data.token);
+        await context.secrets.store(this.baseURI, JSON.stringify(await resp.data));
         await this.buildheaders(context)
         if (resp.data.user.needTwoFactorAuth){            
             let optinitbody = {};
@@ -91,20 +91,20 @@ class postlogin{
     otpfin = async (body, context) => {
         let resp = await axios.post(`https://${this.baseURI}:8443/admin/authentication/otp`, body, {headers: this.headers})
         await context.secrets.delete(this.baseURI)
-        await context.secrets.store(this.baseURI, resp.data.token)
+        await context.secrets.store(this.baseURI, JSON.stringify(await resp.data))
         await await this.buildheaders(context)
         this.authorize(context)
     }
     authorize = async (context) => {
         let resp = await axios.get(`https://${this.baseURI}:8443/admin/authorization`, {headers: this.headers})
         await context.secrets.delete(this.baseURI)
-        await context.secrets.store(this.baseURI, resp.data.token);
+        await context.secrets.store(this.baseURI, JSON.stringify(await resp.data));
         await this.buildheaders(context);
         //await vscode.window.showInformationMessage(`Authenticated to ${this.baseURI}!`)
     }
     buildheaders = async (context) => {
         this.baseURI = context.environmentVariableCollection.get('URL').value;
-        this.headers['Authorization'] = `Bearer ${await context.secrets.get(this.baseURI)}`
+        this.headers['Authorization'] = `Bearer ${JSON.parse(await context.secrets.get(this.baseURI)).token}`
     }
     activeSessions = async ()=> {
         let active = await axios.get(`https://${this.baseURI}:8443/admin/stats/active-sessions/dn`, {headers: this.headers})

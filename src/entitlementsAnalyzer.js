@@ -39,9 +39,11 @@ class entitlementsAnalyzer {
     unassignedentitlement.contextValue = "unassigned"
     for (let entitlement of element.entitlements){
       let policies = await this.getPoliciesofEntitlement(entitlement)
-      let newentitlement = new vscode.TreeItem(`  ${entitlement.name}`)
+      let newentitlement = new vscode.TreeItem(`  ${entitlement.name} (${policies.length})`)
       newentitlement['tags'] = entitlement.tags
-      newentitlement['agid'] = entitlement.id
+      
+      entitlement['agid'] = entitlement.id
+      
       newentitlement['disabled'] = entitlement.disabled
       newentitlement.contextValue = "entitlement"
       //newentitlement.label = entitlement.name
@@ -57,7 +59,9 @@ class entitlementsAnalyzer {
       }
       
     }
-    array.push(unassignedentitlement)
+    if(unassignedentitlement['entitlements'].length > 0){
+      array.push(unassignedentitlement)
+    }
     return array;
   }
   async definePolicies(element){
@@ -75,16 +79,16 @@ class entitlementsAnalyzer {
       }
       newpolicy.tooltip = new vscode.MarkdownString()
       newpolicy.tooltip.appendMarkdown(`[open policy "${policy.name}" in browser](https://${this.session.baseURI}:8443/ui/access/policies/edit/${policy.id})`)
-      newpolicy.tooltip.appendCodeblock(JSON.stringify(`entitlement tags: ${policy.entitlementLinks}`, null, 2), 'javascript')
+      newpolicy.tooltip.appendCodeblock(JSON.stringify(`entitlement tags: ${policy.entitlementLinks}`, null, 2), 'json')
       policy['entitlementNames'] = []
       for (let entitlementid of policy.entitlements){
         for (let entitlement of await this.entitlements){
           if (entitlement.agid === entitlementid){
-            policy.entitlementNames.push(entitlement.name)
+            policy['entitlementNames'].push(entitlement.name)
           }
         }
       }
-      newpolicy.tooltip.appendCodeblock(JSON.stringify(`named entitlements: ${policy.entitlementNames}`, null, 2), 'javascript')
+      newpolicy.tooltip.appendCodeblock(JSON.stringify(`named entitlements: ${policy['entitlementNames']}`, null, 2), 'json')
       array.push(newpolicy)
     }
     return array;
@@ -181,8 +185,10 @@ class entitlementsAnalyzer {
   }
   async getPoliciesofEntitlement(entitlement){
     let array = []
+    
     for (let policy of await this.policies){
       if(policy.entitlements.includes(entitlement.id)){
+        
         policy['contextValue'] = "byname"
         array.push(policy)
       }
@@ -213,7 +219,8 @@ class entitlementsAnalyzer {
       else if(element.contextValue === "nogateways"){
         return await this.defineGatewayLessSite(element)
       }
-    }else{
+    }
+    else{
       return this.defineSiteTreeItems()
     }
 
