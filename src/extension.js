@@ -56,6 +56,7 @@ vscode.commands.registerCommand('customappgate.policyanalyizer', async () => {
 let entitlementsanalyizer = vscode.commands.registerCommand('customappgate.entitlementsanalyizer', async () => {
 	var policytree = new entitlementsAnalyzer(session)
 	vscode.window.createTreeView("entitlementsAnalyzer", {
+		showCollapseAll: true,
 		treeDataProvider: policytree
 	})
 })
